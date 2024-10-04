@@ -5,7 +5,9 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 
+from account_dialog import AccountDialog
 from left_menu import LeftMenuWidget
+from screens.account_screen import AccountScreen
 from screens.dashboard_screen import DashboardScreen
 from screens.setting_screen import SettingScreen
 from screens.transaction_screen import TransactionScreen
@@ -59,21 +61,78 @@ class MainWindow(QMainWindow):
         self.left_menu = LeftMenuWidget()
 
         # Tạo layout bên phải với QVBoxLayout
-        right_layout = QVBoxLayout()
-        right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(10)
+        self.right_layout = QVBoxLayout()
+        self.right_layout.setContentsMargins(0, 0, 0, 0)
+        self.right_layout.setSpacing(10)
 
-        # Tạo widget thông tin ở trên cùng
-        top_info_widget = QWidget()
-        top_info_widget.setFixedHeight(60)
-        top_info_widget.setContentsMargins(10, 0, 10, 0)
-        top_info_widget.setStyleSheet("""
+        self.top_info_widget = None
+
+        # Tạo stacked_widget như trước
+        self.stacked_widget = QStackedWidget()
+        self.stacked_widget.setContentsMargins(0, 10, 0, 10)  # left, top, right, bottom
+        self.stacked_widget.setStyleSheet("""
             background-color: #121212;
             border-radius: 10px;
             color: white;
         """)
 
-        top_layout = QHBoxLayout(top_info_widget)
+        self.dashboard_screen = DashboardScreen()
+        self.transaction_screen = TransactionScreen(main_window=self)
+        self.setting_screen = SettingScreen(main_window=self)
+        self.account_screen = AccountScreen(main_window=self)
+
+        self.scrollable_dashboard = ScrollableWidget(self.dashboard_screen)
+        self.scrollable_transaction = ScrollableWidget(self.transaction_screen)
+
+        self.stacked_widget.addWidget(self.scrollable_dashboard)
+        self.stacked_widget.addWidget(self.scrollable_transaction)
+        self.stacked_widget.addWidget(self.setting_screen)
+        self.stacked_widget.addWidget(self.account_screen)
+
+        # Lưu trữ các màn hình trong từ điển
+        self.screens = {
+            "Tổng Quan": self.scrollable_dashboard,
+            "Giao Dịch": self.scrollable_transaction,
+            "Cài Đặt": self.setting_screen,
+            "Tài Khoản": self.account_screen,
+        }
+
+        # Thêm top_info_widget và stacked_widget vào right_layout
+        self.right_layout.addWidget(self.stacked_widget)
+
+        # Tạo một widget để chứa right_layout
+        right_widget = QWidget()
+        right_widget.setLayout(self.right_layout)
+
+        # Thêm left_menu và right_widget vào main_layout
+        main_layout.addWidget(self.left_menu, 1)
+        main_layout.addWidget(right_widget, 3)
+
+        # Kết nối tín hiệu từ menu bên trái
+        self.left_menu.menu_clicked.connect(self.display_screen)
+
+        # Đặt main_widget làm central widget
+        self.setCentralWidget(main_widget)
+
+        # Hiển thị màn hình mặc định (Trang chủ)
+        self.display_screen("Tổng Quan")
+
+    def create_top_layout(self, menu_name):
+        if self.top_info_widget:
+            # Remove the old widget from the layout if it exists
+            self.right_layout.removeWidget(self.top_info_widget)
+            self.top_info_widget.deleteLater()
+
+        self.top_info_widget = QWidget()
+        self.top_info_widget.setFixedHeight(60)
+        self.top_info_widget.setContentsMargins(10, 0, 10, 0)
+        self.top_info_widget.setStyleSheet("""
+            background-color: #121212;
+            border-radius: 10px;
+            color: white;
+        """)
+
+        top_layout = QHBoxLayout(self.top_info_widget)
         top_layout.setContentsMargins(10, 10, 10, 10)
 
         # Label ở bên trái
@@ -102,66 +161,43 @@ class MainWindow(QMainWindow):
         # Thêm widget vào top_layout
         top_layout.addWidget(info_label)
         top_layout.addStretch()  # Đẩy nút về bên phải
+        if menu_name == "Tài Khoản":
+            add_account = QPushButton("Thêm Tài Khoản")
+            add_account.setFixedSize(150, 40)
+            add_account.setStyleSheet("""
+                QPushButton {
+                    background-color: #e67e22;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                }
+                QPushButton:hover {
+                    background-color: #d35400;
+                }
+            """)
+            add_account.clicked.connect(self.open_add_account_dialog)
+            top_layout.addWidget(add_account)
         top_layout.addWidget(action_button)
-
-        # Tạo stacked_widget như trước
-        self.stacked_widget = QStackedWidget()
-        self.stacked_widget.setContentsMargins(0, 10, 0, 10)  # left, top, right, bottom
-        self.stacked_widget.setStyleSheet("""
-            background-color: #121212;
-            border-radius: 10px;
-            color: white;
-        """)
-
-        self.dashboard_screen = DashboardScreen()
-        self.transaction_screen = TransactionScreen(main_window=self)
-        self.setting_screen = SettingScreen(main_window=self)
-
-        self.scrollable_dashboard = ScrollableWidget(self.dashboard_screen)
-        self.scrollable_transaction = ScrollableWidget(self.transaction_screen)
-
-        self.stacked_widget.addWidget(self.scrollable_dashboard)
-        self.stacked_widget.addWidget(self.scrollable_transaction)
-        self.stacked_widget.addWidget(self.setting_screen)
-
-        # Lưu trữ các màn hình trong từ điển
-        self.screens = {
-            "Tổng Quan": self.scrollable_dashboard,
-            "Giao Dịch": self.scrollable_transaction,
-            "Cài Đặt": self.setting_screen,
-        }
-
-        # Thêm top_info_widget và stacked_widget vào right_layout
-        right_layout.addWidget(top_info_widget)
-        right_layout.addWidget(self.stacked_widget)
-
-        # Tạo một widget để chứa right_layout
-        right_widget = QWidget()
-        right_widget.setLayout(right_layout)
-
-        # Thêm left_menu và right_widget vào main_layout
-        main_layout.addWidget(self.left_menu, 1)
-        main_layout.addWidget(right_widget, 3)
-
-        # Kết nối tín hiệu từ menu bên trái
-        self.left_menu.menu_clicked.connect(self.display_screen)
-
-        # Đặt main_widget làm central widget
-        self.setCentralWidget(main_widget)
-
-        # Hiển thị màn hình mặc định (Trang chủ)
-        self.display_screen("Tổng Quan")
+        if self.top_info_widget is not None:
+            self.right_layout.insertWidget(0, self.top_info_widget)
 
     def open_add_transaction_dialog(self):
         dialog = TransactionDialog(self)
         if dialog.exec_() == QDialog.Accepted:
             data = dialog.get_transaction_data()
 
+    def open_add_account_dialog(self):
+        dialog = AccountDialog(self)
+        if dialog.exec_() == QDialog.Accepted:
+            data = dialog.get_account_data()
+
     def display_screen(self, menu_name):
         widget = self.screens.get(menu_name)
         if widget:
             self.stacked_widget.setCurrentWidget(widget)
             widget.initialize()
+            self.create_top_layout(menu_name)
+
         else:
             # Nếu không tìm thấy, hiển thị màn hình mặc định
             self.stacked_widget.setCurrentWidget(self.scrollable_dashboard)

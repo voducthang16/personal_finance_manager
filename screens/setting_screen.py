@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
     QWidget, QLabel, QLineEdit, QPushButton,
-    QVBoxLayout, QHBoxLayout, QMessageBox
+    QVBoxLayout, QHBoxLayout
 )
 from PyQt5.QtCore import Qt
 import sqlite3
@@ -32,9 +32,6 @@ class SettingScreen(QWidget):
                 padding-left: 10px;
                 border-radius: 8px;
             }
-            QLineEdit:focus {
-                border: 1px solid #fff;
-            }
         """)
 
         self.email_label = QLabel('Email:')
@@ -48,9 +45,6 @@ class SettingScreen(QWidget):
                 color: white;
                 padding-left: 10px;
                 border-radius: 8px;
-            }
-            QLineEdit:focus {
-                border: 1px solid #fff;
             }
         """)
 
@@ -84,19 +78,31 @@ class SettingScreen(QWidget):
         email_layout.addWidget(self.email_label, 1)
         email_layout.addWidget(self.email_input, 3)
 
+        # Create a QWidget to contain the name, email, and button
+        user_widget = QWidget()
+        user_widget.setStyleSheet("""
+            QWidget {
+                background-color: #292929;
+                border-radius: 10px;
+            }
+        """)
+        input_layout = QVBoxLayout(user_widget)
+        input_layout.addLayout(name_layout)
+        input_layout.addLayout(email_layout)
+        input_layout.addWidget(self.update_button, alignment=Qt.AlignRight)
+
         # Layout chính
         main_layout = QVBoxLayout()
-        main_layout.addLayout(name_layout)
-        main_layout.addLayout(email_layout)
-        main_layout.addWidget(self.update_button, alignment=Qt.AlignRight)
+        main_layout.addWidget(user_widget)
+        main_layout.setContentsMargins(10, 0, 10, 0)
         main_layout.addStretch()
 
         self.setLayout(main_layout)
 
     def bind_user_info(self, user_info):
         if user_info:
-            self.name_input.setText(user_info[1])  # Giả sử cột name là thứ 2
-            self.email_input.setText(user_info[2])  # Giả sử cột email là thứ 3
+            self.name_input.setText(user_info['name'])
+            self.email_input.setText(user_info['email'])
             self.is_edit_mode = True
         else:
             self.clear_fields()
@@ -112,7 +118,7 @@ class SettingScreen(QWidget):
 
         if self.is_edit_mode:
             try:
-                self.main_window.db_manager.update_user(self.main_window.user_info[0], name, email)
+                self.main_window.db_manager.update_user(self.main_window.user_info['user_id'], name, email)
                 self.main_window.user_info = self.main_window.db_manager.get_first_user()
                 QToast("Thông tin đã được cập nhật thành công!", parent=self.main_window, toast_type=QToast.SUCCESS)
             except sqlite3.Error as e:

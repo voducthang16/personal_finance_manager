@@ -66,7 +66,15 @@ class FinanceManager:
     ### Các phương thức để quản lý người dùng, tài khoản, danh mục và giao dịch
     def get_first_user(self):
         self.cursor.execute("SELECT * FROM users ORDER BY user_id ASC LIMIT 1")
-        return self.cursor.fetchone()
+        row = self.cursor.fetchone()
+        if row:
+            return {
+                'user_id': row[0],
+                'name': row[1],
+                'email': row[2],
+                'created_at': row[3]
+            }
+        return None
 
     # Thêm người dùng mới
     def add_user(self, name, email):
@@ -92,6 +100,13 @@ class FinanceManager:
             print(f"Lỗi khi cập nhật người dùng: {e}")
             raise e
 
+    def get_accounts_for_user(self, user_id):
+        """Lấy danh sách tài khoản của người dùng"""
+        self.cursor.execute("""
+        SELECT * FROM accounts WHERE user_id = ?
+        """, (user_id,))
+        return self.cursor.fetchall()
+
     # Thêm tài khoản cho người dùng
     def add_account(self, user_id, account_name, balance=0):
         try:
@@ -102,6 +117,31 @@ class FinanceManager:
             self.conn.commit()
         except sqlite3.Error as e:
             print(f"Lỗi khi thêm tài khoản: {e}")
+
+    # New method to edit an account
+    def edit_account(self, account_id, account_name, balance):
+        try:
+            self.cursor.execute("""
+                UPDATE accounts 
+                SET account_name = ?, balance = ?
+                WHERE account_id = ?
+            """, (account_name, balance, account_id))
+            self.conn.commit()
+        except sqlite3.Error as e:
+            print(f"Lỗi khi chỉnh sửa tài khoản: {e}")
+            raise e  # Re-raise exception for higher-level handling
+
+    # New method to delete an account
+    def delete_account(self, account_id):
+        try:
+            self.cursor.execute("""
+                DELETE FROM accounts 
+                WHERE account_id = ?
+            """, (account_id,))
+            self.conn.commit()
+        except sqlite3.Error as e:
+            print(f"Lỗi khi xóa tài khoản: {e}")
+            raise e  # Re-raise exception for higher-level handling
 
     # Thêm danh mục
     def add_category(self, category_name, category_type):

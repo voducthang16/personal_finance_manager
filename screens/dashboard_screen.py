@@ -22,6 +22,7 @@ class DashboardScreen(QWidget):
         title = QLabel()
         title.setText("Tổng Quan Tài Chính")
         title.setStyleSheet("""
+            background-color: #292929;
             font-weight: bold;
             font-size: 24px;
         """)
