@@ -3,132 +3,191 @@
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QDialog, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QComboBox, QDateEdit, QPushButton, QFormLayout
+    QLabel, QLineEdit, QComboBox, QDateEdit, QPushButton, QSizePolicy
 )
 from PyQt5.QtCore import Qt, QDate
-from PyQt5.QtGui import QIcon, QDoubleValidator
+from PyQt5.QtGui import QDoubleValidator
+
 
 class TransactionDialog(QDialog):
     def __init__(self, parent=None, transaction_data=None):
         super().__init__(parent)
         self.setWindowTitle("Thêm/Giữa Giao dịch")
-        self.setWindowIcon(QIcon("icons/transaction.png"))  # Thêm biểu tượng nếu có
-        self.setFixedSize(450, 400)
+        self.setFixedSize(600, 600)
         self.setup_ui()
         self.transaction_data = transaction_data
         if self.transaction_data:
             self.populate_data()
 
     def setup_ui(self):
-        # Đặt nền màu trắng cho dialog và các widget con
         self.setStyleSheet("""
             QDialog {
-                background-color: white;
+                background-color: #000;
             }
+
             QLabel {
-                color: black;
-                font-size: 14px;
+                color: #fff;
+                font-size: 16px;
+                background-color: transparent;
             }
+
             QLineEdit, QComboBox, QDateEdit {
-                background-color: #f0f0f0;
-                color: black;
-                border: 1px solid #CCCCCC;
-                border-radius: 5px;
-                padding: 5px;
-                font-size: 14px;
+                padding-left: 10px;
+                background-color: #121212;
+                color: #fff;
+                border: none;
+                border-radius: 6px;
+                font-size: 16px;
             }
+
             QComboBox QAbstractItemView {
-                background-color: white;
-                selection-background-color: #5DADE2;
-                color: black;
+                background-color: #1e1e1e;
+                color: #fff;
+                border: none;
+                padding: 0;
+                margin: 0;
+                border-radius: 6px;
             }
+            
+            QComboBox::item {
+                height: 20px;
+                padding: 5px;
+                border-radius: 6px;
+            }
+        
+            QComboBox::item:selected {
+                background-color: #2e2e2e;
+                color: #fff;
+            }
+        
+            QComboBox::item:hover {
+                background-color: #2e2e2e;
+                color: #fff;
+            }
+
+            QDateEdit::drop-down,
+            QComboBox::drop-down {
+                border: none;
+                background-color: transparent;
+                width: 20px;
+                border-top-right-radius: 6px;
+                border-bottom-right-radius: 6px;
+            }
+
+            QDateEdit::down-arrow,
+            QComboBox::down-arrow {
+                image: url('down_arrow.png');
+                width: 10px;
+                height: 10px;
+                margin: 0px;
+                padding: 0px;
+                alignment: center;
+            }
+
+            QLineEdit:focus, QComboBox:focus, QDateEdit:focus {
+                border: 1px solid #fff;
+            }
+
             QPushButton {
-                font-size: 14px;
-                border-radius: 5px;
+                font-size: 16px;
+                border-radius: 6px;
+                padding: 10px 20px;
+                min-width: 100px;
             }
+
             QPushButton#CancelButton {
-                background-color: #E74C3C;
-                color: white;
+                background-color: #e74c3c;
+                color: #fff;
             }
+
             QPushButton#SubmitButton {
-                background-color: #5DADE2;
-                color: white;
+                background-color: #5dade2;
+                color: #fff;
             }
+
             QPushButton#CancelButton:hover {
-                background-color: #C0392B;
+                background-color: #c0392b;
             }
+
             QPushButton#SubmitButton:hover {
-                background-color: #3498DB;
+                background-color: #3498db;
             }
         """)
 
-        # Layout chính
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(15)
+        main_layout.setSpacing(20)
 
-        # Form layout
-        form_layout = QFormLayout()
-        form_layout.setLabelAlignment(Qt.AlignRight)
-        form_layout.setFormAlignment(Qt.AlignHCenter | Qt.AlignTop)
-        form_layout.setHorizontalSpacing(10)
-        form_layout.setVerticalSpacing(20)
+        # Row layout helper function
+        def create_row(label_text, widget):
+            row_layout = QHBoxLayout()
+            label = QLabel(label_text)
+            label.setFixedHeight(40)
+            row_layout.addWidget(label)
+            row_layout.addWidget(widget)
+            row_layout.setStretch(0, 1)
+            row_layout.setStretch(1, 3)
+            return row_layout
 
-        # Số tiền
+        # Số tiền input field
         self.amount_input = QLineEdit()
+        self.amount_input.setFixedHeight(40)
         self.amount_input.setPlaceholderText("Nhập số tiền")
         self.amount_input.setValidator(QDoubleValidator(0.99, 9999999.99, 2))
-        form_layout.addRow(QLabel("Số tiền:"), self.amount_input)
+        main_layout.addLayout(create_row("Số tiền:", self.amount_input))
 
-        # Loại giao dịch
+        # Loại giao dịch dropdown
         self.type_combo = QComboBox()
+        self.type_combo.setFixedHeight(40)
         self.type_combo.addItems(["Chi tiêu", "Thu nhập", "Vay nợ"])
-        form_layout.addRow(QLabel("Loại giao dịch:"), self.type_combo)
+        main_layout.addLayout(create_row("Loại giao dịch:", self.type_combo))
 
-        # Hạng mục
+        # Hạng mục dropdown
         self.category_combo = QComboBox()
+        self.category_combo.setFixedHeight(40)
         self.category_combo.addItems([
             "Đồ ăn", "Đi chợ", "Giải trí", "Tiện ích",
             "Di chuyển", "Lương", "Thưởng", "Vay nợ", "Khác"
         ])
-        form_layout.addRow(QLabel("Hạng mục:"), self.category_combo)
+        main_layout.addLayout(create_row("Hạng mục:", self.category_combo))
 
-        # Diễn giải
+        # Diễn giải input field
         self.description_input = QLineEdit()
+        self.description_input.setFixedHeight(40)
         self.description_input.setPlaceholderText("Nhập diễn giải")
-        form_layout.addRow(QLabel("Diễn giải:"), self.description_input)
+        main_layout.addLayout(create_row("Diễn giải:", self.description_input))
 
-        # Ngày giao dịch
+        # Ngày giao dịch field with a calendar popup
         self.date_edit = QDateEdit()
+        self.date_edit.setFixedHeight(40)
         self.date_edit.setDate(QDate.currentDate())
         self.date_edit.setCalendarPopup(True)
-        form_layout.addRow(QLabel("Ngày giao dịch:"), self.date_edit)
+        main_layout.addLayout(create_row("Ngày giao dịch:", self.date_edit))
 
-        # Tài khoản
+        # Tài khoản dropdown
         self.account_combo = QComboBox()
+        self.account_combo.setFixedHeight(40)
         self.account_combo.addItems(["Tiền mặt", "Tài khoản ngân hàng", "Thẻ tín dụng"])
-        form_layout.addRow(QLabel("Tài khoản:"), self.account_combo)
+        main_layout.addLayout(create_row("Tài khoản:", self.account_combo))
 
-        main_layout.addLayout(form_layout)
-
-        # Divider
+        # Divider for buttons
         divider = QLabel()
-        divider.setFixedHeight(2)
-        divider.setStyleSheet("background-color: #CCCCCC;")
+        divider.setFixedHeight(1)
+        divider.setStyleSheet("background-color: #444444;")
         main_layout.addWidget(divider)
 
-        # Buttons
+        # Buttons for actions
         button_layout = QHBoxLayout()
-        button_layout.setSpacing(10)
+        button_layout.setSpacing(15)
 
         self.cancel_button = QPushButton("Hủy", self)
         self.cancel_button.setObjectName("CancelButton")
-        self.cancel_button.setFixedHeight(40)
+        self.cancel_button.setFixedHeight(45)
         self.cancel_button.clicked.connect(self.reject)
 
-        self.submit_button = QPushButton("Submit", self)
+        self.submit_button = QPushButton("Lưu", self)
         self.submit_button.setObjectName("SubmitButton")
-        self.submit_button.setFixedHeight(40)
+        self.submit_button.setFixedHeight(45)
         self.submit_button.clicked.connect(self.submit)
 
         button_layout.addStretch()
@@ -165,10 +224,11 @@ class TransactionDialog(QDialog):
             self.date_edit.setDate(date)
         self.account_combo.setCurrentText(self.transaction_data.get("account", "Tiền mặt"))
 
-# Đoạn mã này cho phép bạn chạy dialog độc lập để kiểm tra giao diện
+
+# Đoạn mã này giúp chạy dialog độc lập để kiểm tra giao diện
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     dialog = TransactionDialog()
     if dialog.exec_() == QDialog.Accepted:
-        print(dialog.get_transaction_data())
+        print("exit")
     sys.exit(app.exec_())

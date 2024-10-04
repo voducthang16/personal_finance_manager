@@ -7,15 +7,20 @@ from PyQt5.QtCore import Qt
 
 from left_menu import LeftMenuWidget
 from screens.dashboard_screen import DashboardScreen
-from screens.transaction import TransactionScreen
+from screens.setting_screen import SettingScreen
+from screens.transaction_screen import TransactionScreen
 from utils.scrollabe_widget import ScrollableWidget
 from transaction_dialog import TransactionDialog
-
+from finance_manager import FinanceManager
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setup_window_property()
+
+        self.db_manager = FinanceManager()
+        self.user_info = self.get_user_info()
+
         self.setContentsMargins(10, 10, 10, 10)
         self.setStyleSheet("""
             QScrollBar {
@@ -77,8 +82,8 @@ class MainWindow(QMainWindow):
         info_label.setStyleSheet("font-size: 16px;")
 
         # Nút ở bên phải
-        action_button = QPushButton("Mở Modal")
-        action_button.setFixedSize(100, 40)
+        action_button = QPushButton("Thêm Giao Dịch")
+        action_button.setFixedSize(120, 40)
         action_button.setStyleSheet("""
             QPushButton {
                 background-color: #3498db;
@@ -109,19 +114,21 @@ class MainWindow(QMainWindow):
         """)
 
         self.dashboard_screen = DashboardScreen()
-        self.transaction_screen = TransactionScreen()
+        self.transaction_screen = TransactionScreen(main_window=self)
+        self.setting_screen = SettingScreen(main_window=self)
 
         self.scrollable_dashboard = ScrollableWidget(self.dashboard_screen)
         self.scrollable_transaction = ScrollableWidget(self.transaction_screen)
 
         self.stacked_widget.addWidget(self.scrollable_dashboard)
         self.stacked_widget.addWidget(self.scrollable_transaction)
+        self.stacked_widget.addWidget(self.setting_screen)
 
         # Lưu trữ các màn hình trong từ điển
         self.screens = {
             "Tổng Quan": self.scrollable_dashboard,
             "Giao Dịch": self.scrollable_transaction,
-            # "Liên hệ": self.contact_screen,  # Nếu không cần cuộn
+            "Cài Đặt": self.setting_screen,
         }
 
         # Thêm top_info_widget và stacked_widget vào right_layout
@@ -149,13 +156,12 @@ class MainWindow(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec_() == QDialog.Accepted:
             data = dialog.get_transaction_data()
-            # Xử lý dữ liệu giao dịch mới (ví dụ: thêm vào cơ sở dữ liệu hoặc cập nhật giao diện)
-            print("Giao dịch mới:", data)
 
     def display_screen(self, menu_name):
         widget = self.screens.get(menu_name)
         if widget:
             self.stacked_widget.setCurrentWidget(widget)
+            widget.initialize()
         else:
             # Nếu không tìm thấy, hiển thị màn hình mặc định
             self.stacked_widget.setCurrentWidget(self.scrollable_dashboard)
@@ -178,6 +184,13 @@ class MainWindow(QMainWindow):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
+    def get_user_info(self):
+        user = self.db_manager.get_first_user()
+        if not user:
+            self.user_info = None
+        else:
+            self.user_info = user
+        return self.user_info
 
 def main():
     app = QApplication(sys.argv)

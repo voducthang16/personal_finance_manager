@@ -4,11 +4,12 @@ from PyQt5.QtCore import Qt
 class ScrollableWidget(QWidget):
     def __init__(self, content_widget):
         super().__init__()
+        self.content_widget = content_widget
 
         # Tạo QScrollArea
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setWidget(content_widget)
+        scroll_area.setWidget(self.content_widget)
 
         # Loại bỏ viền và thiết lập margin
         scroll_area.setFrameShape(QFrame.NoFrame)
@@ -33,3 +34,7 @@ class ScrollableWidget(QWidget):
         layout.addWidget(scroll_area)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
+
+    def initialize(self):
+        if hasattr(self.content_widget, 'initialize'):
+            self.content_widget.initialize()

@@ -45,7 +45,7 @@ class LeftMenuWidget(QWidget):
         menu_layout.setSpacing(0)
 
         # Danh sách các mục menu
-        self.menu_items = ["Tổng Quan", "Giao Dịch", "Liên hệ"]
+        self.menu_items = ["Tổng Quan", "Giao Dịch", "Cài Đặt", "Liên hệ"]
         self.buttons = {}  # Lưu trữ các nút với tên menu
 
         for item in self.menu_items:

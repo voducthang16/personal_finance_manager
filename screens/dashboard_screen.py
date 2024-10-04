@@ -15,6 +15,9 @@ class DashboardScreen(QWidget):
         # Đẩy các widget lên trên
         self.layout.addStretch()
 
+    def initialize(self):
+        print("initialize dashboard")
+
     def create_header(self):
         title = QLabel()
         title.setText("Tổng Quan Tài Chính")
