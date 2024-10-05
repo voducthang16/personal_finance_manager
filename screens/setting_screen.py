@@ -113,23 +113,23 @@ class SettingScreen(QWidget):
         email = self.email_input.text().strip()
 
         if not name or not email:
-            QToast("Vui lòng điền đầy đủ thông tin!", parent=self.main_window, toast_type=QToast.WARNING)
+            QToast("Vui lòng điền đầy đủ thông tin!", toast_type=QToast.WARNING)
             return
 
         if self.is_edit_mode:
             try:
                 self.main_window.db_manager.update_user(self.main_window.user_info['user_id'], name, email)
                 self.main_window.user_info = self.main_window.db_manager.get_first_user()
-                QToast("Thông tin đã được cập nhật thành công!", parent=self.main_window, toast_type=QToast.SUCCESS)
+                QToast("Thông tin đã được cập nhật thành công!", toast_type=QToast.SUCCESS)
             except sqlite3.Error as e:
-                QToast(f"Lỗi khi cập nhật thông tin: {e}", parent=self.main_window, toast_type=QToast.ERROR)
+                QToast(f"Lỗi khi cập nhật thông tin: {e}", toast_type=QToast.ERROR)
         else:
             try:
                 self.main_window.db_manager.add_user(name, email)
                 self.main_window.user_info = self.main_window.db_manager.get_first_user()
-                QToast("Thông tin đã được cập nhật thành công!", parent=self.main_window, toast_type=QToast.SUCCESS)
+                QToast("Thông tin đã được cập nhật thành công!", toast_type=QToast.SUCCESS)
             except sqlite3.Error as e:
-                QToast(f"Lỗi khi thêm người dùng: {e}", parent=self.main_window, toast_type=QToast.ERROR)
+                QToast(f"Lỗi khi thêm người dùng: {e}", toast_type=QToast.ERROR)
 
     def clear_fields(self):
         self.name_input.clear()

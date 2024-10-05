@@ -1,11 +1,10 @@
-import sys
-from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QFrame, QGridLayout, QScrollArea
+from PyQt5.QtWidgets import QLabel, QVBoxLayout, QFrame, QGridLayout, QWidget
 from PyQt5.QtCore import Qt
 
 
 class DashboardScreen(QWidget):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
         self.layout = QVBoxLayout(self)
 

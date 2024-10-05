@@ -1,3 +1,4 @@
+import sqlite3
 import sys
 from PyQt5.QtWidgets import (
     QMainWindow, QApplication, QDesktopWidget, QWidget,
@@ -5,14 +6,11 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 
-from account_dialog import AccountDialog
-from left_menu import LeftMenuWidget
-from screens.account_screen import AccountScreen
-from screens.dashboard_screen import DashboardScreen
-from screens.setting_screen import SettingScreen
-from screens.transaction_screen import TransactionScreen
+from dialogs.account_dialog import AccountDialog
+from layouts.left_menu import LeftMenuWidget
+from screens import DashboardScreen, AccountScreen, SettingScreen, TransactionScreen
 from utils.scrollabe_widget import ScrollableWidget
-from transaction_dialog import TransactionDialog
+from dialogs.transaction_dialog import TransactionDialog
 from finance_manager import FinanceManager
 
 class MainWindow(QMainWindow):
@@ -67,7 +65,7 @@ class MainWindow(QMainWindow):
 
         self.top_info_widget = None
 
-        # Tạo stacked_widget như trước
+        # Tạo stacked_widget
         self.stacked_widget = QStackedWidget()
         self.stacked_widget.setContentsMargins(0, 10, 0, 10)  # left, top, right, bottom
         self.stacked_widget.setStyleSheet("""
@@ -76,7 +74,8 @@ class MainWindow(QMainWindow):
             color: white;
         """)
 
-        self.dashboard_screen = DashboardScreen()
+        # init screens
+        self.dashboard_screen = DashboardScreen(parent=self)
         self.transaction_screen = TransactionScreen(main_window=self)
         self.setting_screen = SettingScreen(main_window=self)
         self.account_screen = AccountScreen(main_window=self)
@@ -155,7 +154,6 @@ class MainWindow(QMainWindow):
             }
         """)
 
-        # Kết nối nút với hàm mở modal
         action_button.clicked.connect(self.open_add_transaction_dialog)
 
         # Thêm widget vào top_layout
@@ -190,6 +188,14 @@ class MainWindow(QMainWindow):
         dialog = AccountDialog(self)
         if dialog.exec_() == QDialog.Accepted:
             data = dialog.get_account_data()
+            user_id = self.user_info['user_id']
+            account_name = data['account_name']
+            balance = data['balance']
+            try:
+                self.db_manager.add_account(user_id, account_name, balance)
+                # call initialize def at current screen here for me
+            except sqlite3.Error as e:
+                print(e)
 
     def display_screen(self, menu_name):
         widget = self.screens.get(menu_name)
@@ -202,6 +208,11 @@ class MainWindow(QMainWindow):
             # Nếu không tìm thấy, hiển thị màn hình mặc định
             self.stacked_widget.setCurrentWidget(self.scrollable_dashboard)
 
+    def refresh_current_screen(self):
+        current_widget = self.stacked_widget.currentWidget()
+        if hasattr(current_widget, 'initialize'):
+            current_widget.initialize()
+
     def setup_window_property(self):
         self.setWindowTitle("Personal Finance Manager")
 
@@ -212,9 +223,6 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(min_width, min_height)
 
         # Center screen khi mở ứng dụng
-        self.center()
-
-    def center(self):
         qr = self.frameGeometry()
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
@@ -234,7 +242,6 @@ def main():
     main_window.show()
 
     sys.exit(app.exec_())
-
 
 if __name__ == "__main__":
     main()

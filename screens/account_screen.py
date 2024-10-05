@@ -1,5 +1,8 @@
-from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QPushButton, QDialog, QLineEdit, QHBoxLayout, QMessageBox, QTableView
-from PyQt5.QtGui import QStandardItemModel
+from PyQt5.QtWidgets import (
+    QWidget, QLabel, QVBoxLayout, QHBoxLayout, QFrame
+)
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
 
 
 class AccountScreen(QWidget):
@@ -7,122 +10,106 @@ class AccountScreen(QWidget):
         super().__init__()
         self.main_window = main_window
 
-        # Layout for the account screen
+        # Main layout
         self.layout = QVBoxLayout(self)
         self.setLayout(self.layout)
 
+        # Set background color for the entire widget
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #292929;
+                color: #ffffff;
+            }
+            QLabel {
+                color: #ffffff;
+            }
+        """)
+
+        # Header layout
+        header_layout = QHBoxLayout()
+        self.layout.addLayout(header_layout)
+
+        # Title label for the account list
+        self.title_label = QLabel("Danh Sách Tài Khoản")
+        self.title_label.setFont(QFont("Arial", 18, QFont.Bold))
+        self.title_label.setStyleSheet("""
+            QLabel {
+                color: #ffffff;
+            }
+        """)
+        header_layout.addWidget(self.title_label)
+
+        header_layout.addStretch()
+
+        # Account list area (will display the account frames)
+        self.account_list_widget = QWidget()
+        self.account_list_layout = QVBoxLayout(self.account_list_widget)
+        self.account_list_layout.setSpacing(15)
+        self.layout.addWidget(self.account_list_widget)
+
+        # Label displayed when no accounts are available
         self.no_account_label = QLabel("Chưa có tài khoản nào. Vui lòng thêm tài khoản.")
+        self.no_account_label.setFont(QFont("Arial", 14))
+        self.no_account_label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.no_account_label)
+        self.no_account_label.setVisible(False)
 
-        # QTableView to display accounts
-        self.account_table = QTableView(self)
-        self.account_table.setVisible(False)
-        self.layout.addWidget(self.account_table)
-
-        # Add account button
-        self.add_account_button = QPushButton("Thêm tài khoản")
-        self.layout.addWidget(self.add_account_button)
-
-        # Connect the button to open the add account dialog
-        self.add_account_button.clicked.connect(self.open_add_account_dialog)
-
-        # Initialize table model
-        self.model = QStandardItemModel()
-        self.model.setHorizontalHeaderLabels(["Tên tài khoản", "Số dư (VND)"])
-        self.account_table.setModel(self.model)
+        # Load accounts on initialize
+        self.initialize()
 
     def initialize(self):
-        print("initialize account screen")
-        print(self.main_window.user_info)
-
-        # Get accounts from the database and update the UI
+        """Load the accounts and display them."""
         self.load_accounts()
 
     def load_accounts(self):
-        """Load accounts from the database and update the UI"""
+        """Fetch accounts from the database and display them as custom widgets."""
+        # Clear the layout first
+        while self.account_list_layout.count():
+            child = self.account_list_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
         accounts = self.main_window.db_manager.get_accounts_for_user(self.main_window.user_info['user_id'])
-        print(accounts)
-        #
-        # # Clear the current model data
-        # self.model.removeRows(0, self.model.rowCount())
-        #
-        # # Check if there are any accounts
-        # if not accounts:
-        #     self.no_account_label.setVisible(True)
-        #     self.account_table.setVisible(False)
-        # else:
-        #     # Populate the table with accounts
-        #     for account in accounts:
-        #         account_name_item = QStandardItem(account[2])
-        #         balance_item = QStandardItem(f"{account[3]:,.0f}")
-        #         self.model.appendRow([account_name_item, balance_item])
-        #
-        #     # Hide the no account label and show the table
-        #     self.no_account_label.setVisible(False)
-        #     self.account_table.setVisible(True)
 
-    def open_add_account_dialog(self):
-        """Open dialog to add a new account"""
-        dialog = AddAccountDialog(self)
-        if dialog.exec_() == QDialog.Accepted:
-            account_name, balance = dialog.get_account_data()
+        if not accounts:
+            self.no_account_label.setVisible(True)
+        else:
+            self.no_account_label.setVisible(False)
+            for account in accounts:
+                account_id, user_id, account_name, balance, created_at = account
+                self.add_account_item(account_name, balance)
 
-            # Add the account to the database
-            self.main_window.finance_manager.add_account(self.main_window.user_info['user_id'], account_name, balance)
+    def add_account_item(self, account_name, balance):
+        """Add a custom account item to the account list layout."""
+        account_frame = QFrame()
+        account_frame.setStyleSheet("""
+            QFrame {
+                background-color: #393939;
+                border-radius: 12px;
+                padding: 20px;
+                margin: 10px;
+                border: 1px solid #444;
+            }
+        """)
+        account_layout = QHBoxLayout(account_frame)
+        account_frame.setLayout(account_layout)
 
-            # Reload the accounts to update the UI
-            self.load_accounts()
+        # Account Name label styling
+        account_name_label = QLabel(account_name)
+        account_name_label.setFont(QFont("Arial", 16, QFont.Bold))
+        account_name_label.setStyleSheet("color: #ffffff;")
+        account_layout.addWidget(account_name_label)
 
+        # Account Balance label styling
+        account_balance_label = QLabel(f"{balance:,.0f} VND")
+        account_balance_label.setFont(QFont("Arial", 16))
+        account_balance_label.setStyleSheet("color: #1abc9c;")
+        account_balance_label.setAlignment(Qt.AlignRight)
+        account_layout.addWidget(account_balance_label)
 
-class AddAccountDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Thêm Tài khoản")
-        self.setFixedSize(400, 200)
+        self.account_list_layout.addWidget(account_frame)
 
-        # Set up the dialog UI
-        self.layout = QVBoxLayout(self)
-        self.setLayout(self.layout)
+    def on_account_added(self):
+        """Reload the accounts after one is added."""
+        self.load_accounts()
 
-        # Account name input
-        self.account_name_input = QLineEdit(self)
-        self.account_name_input.setPlaceholderText("Nhập tên tài khoản")
-        self.layout.addWidget(self.account_name_input)
-
-        # Balance input
-        self.balance_input = QLineEdit(self)
-        self.balance_input.setPlaceholderText("Nhập số dư ban đầu")
-        self.layout.addWidget(self.balance_input)
-
-        # Buttons
-        button_layout = QHBoxLayout()
-        self.cancel_button = QPushButton("Hủy")
-        self.cancel_button.clicked.connect(self.reject)
-        self.submit_button = QPushButton("Lưu")
-        self.submit_button.clicked.connect(self.submit)
-
-        button_layout.addWidget(self.cancel_button)
-        button_layout.addWidget(self.submit_button)
-
-        self.layout.addLayout(button_layout)
-
-    def submit(self):
-        """Handle the submit button"""
-        account_name = self.account_name_input.text()
-        balance = self.balance_input.text()
-
-        if not account_name or not balance:
-            QMessageBox.warning(self, "Lỗi", "Vui lòng nhập đầy đủ thông tin.")
-            return
-
-        try:
-            balance = float(balance)
-        except ValueError:
-            QMessageBox.warning(self, "Lỗi", "Số dư phải là một số.")
-            return
-
-        self.accept()
-
-    def get_account_data(self):
-        """Get the data entered by the user"""
-        return self.account_name_input.text(), float(self.balance_input.text())
