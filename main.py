@@ -9,7 +9,7 @@ from PyQt5.QtCore import Qt
 from dialogs.account_dialog import AccountDialog
 from layouts.left_menu import LeftMenuWidget
 from screens import DashboardScreen, AccountScreen, SettingScreen, TransactionScreen
-from utils.scrollabe_widget import ScrollableWidget
+from widgets.scrollabe_widget import ScrollableWidget
 from dialogs.transaction_dialog import TransactionDialog
 from finance_manager import FinanceManager
 
