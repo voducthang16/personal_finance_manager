@@ -5,13 +5,14 @@ from models.generic_table_model import GenericTableModel
 from widgets.action_widget import ActionWidget
 
 class TableWidget(QWidget):
-    def __init__(self, main_window=None, current_screen=None, page_size=10, edit_dialog=None, delete_dialog=None):
+    def __init__(self, main_window=None, current_screen=None, page_size=10, edit_dialog=None, delete_dialog=None, column_mapping=None):
         super().__init__(current_screen)
         self.main_window = main_window
         self.current_screen = current_screen
         self.page_size = page_size
         self.edit_dialog = edit_dialog
         self.delete_dialog = delete_dialog
+        self.column_mapping = column_mapping
 
         # Main layout
         self.layout = QVBoxLayout(self)
@@ -20,7 +21,7 @@ class TableWidget(QWidget):
 
         # QTableView
         self.table_view = QTableView()
-        self.model = GenericTableModel(page_size=self.page_size)
+        self.model = GenericTableModel(page_size=self.page_size, column_mapping=self.column_mapping)
         self.table_view.setModel(self.model)
         self.table_view.setSelectionBehavior(QTableView.SelectRows)
         self.table_view.setAlternatingRowColors(True)

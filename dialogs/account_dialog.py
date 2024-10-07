@@ -6,7 +6,7 @@ from dialogs.base_dialog import BaseDialog
 
 class AccountDialog(BaseDialog):
     def __init__(self, main_window=None, account_data=None):
-        self.account_id = account_data[0] if account_data else None
+        self.account_id = account_data['account_id'] if account_data else None
         title = "Sửa Tài Khoản" if self.account_id else "Thêm Tài Khoản"
         width = 600
         height = 600
@@ -64,8 +64,8 @@ class AccountDialog(BaseDialog):
 
     def populate_data(self):
         """Điền dữ liệu vào các trường trong dialog khi chỉnh sửa tài khoản."""
-        account_name = self.account_data[1]  # Tên tài khoản là phần tử đầu tiên
-        balance = self.account_data[2]  # Số dư là phần tử thứ hai
+        account_name = self.account_data['account_name']  # Tên tài khoản là phần tử đầu tiên
+        balance = self.account_data['balance']  # Số dư là phần tử thứ hai
         # Remove commas and ' VND' to make it compatible with float conversion
         balance_clean = balance.replace(",", "").replace(" VND", "")
 

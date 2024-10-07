@@ -105,7 +105,16 @@ class FinanceManager:
         self.cursor.execute("""
         SELECT * FROM accounts WHERE user_id = ? LIMIT ? OFFSET ?
         """, (user_id, limit, offset))
-        return self.cursor.fetchall()
+        # Lấy tên cột
+        columns = [column[0] for column in self.cursor.description]
+
+        # Chuyển đổi mỗi hàng từ tuple sang dict
+        accounts = []
+        for row in self.cursor.fetchall():
+            account_dict = dict(zip(columns, row))
+            accounts.append(account_dict)
+
+        return accounts
 
     def count_accounts_for_user(self, user_id):
         """

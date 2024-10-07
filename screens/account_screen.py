@@ -1,7 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout
 
 from dialogs.account_dialog import AccountDialog
-from dialogs.base_dialog import BaseDialog
 from widgets.table_widget import TableWidget
 
 class AccountScreen(QWidget):
@@ -20,6 +19,12 @@ class AccountScreen(QWidget):
 
         self.create_header()
 
+        self.column_mapping = {
+            0: 'account_name',
+            1: 'balance',
+            2: 'created_at',
+        }
+
         # Table widget to display account information
         self.table_widget = TableWidget(
             main_window=self.main_window,
@@ -27,6 +32,7 @@ class AccountScreen(QWidget):
             page_size=self.page_size,
             edit_dialog=self.open_edit_account_dialog,
             delete_dialog=self.confirm_delete_account,
+            column_mapping=self.column_mapping,
         )
         self.layout.addWidget(self.table_widget)
 
@@ -78,10 +84,21 @@ class AccountScreen(QWidget):
     def format_accounts_data(self, accounts_raw):
         formatted_data = []
         for account in accounts_raw:
-            account_id, user_id, account_name, balance, last_updated = account
-            balance_formatted = f"{balance:,.0f} VND"  # Định dạng số dư
-            last_updated_formatted = last_updated.split()[0]  # Chỉ lấy ngày
-            formatted_data.append([account_id, account_name, balance_formatted, last_updated_formatted])
+            # Truy cập các trường từ dictionary account
+            account_id = account['account_id']
+            account_name = account['account_name']
+            balance = account['balance']
+
+            # Định dạng số dư
+            balance_formatted = f"{balance:,.0f} VND"  # Ví dụ: 1,000,000 VND
+
+            # Thêm vào danh sách dữ liệu đã được định dạng
+            formatted_data.append({
+                'account_id': account_id,  # Bạn có thể loại bỏ dòng này nếu không muốn hiển thị account_id
+                'account_name': account_name,
+                'balance': balance_formatted,
+                'created_at': account['created_at'].split()[0]
+            })
         return formatted_data
 
     def next_page(self):
@@ -95,6 +112,7 @@ class AccountScreen(QWidget):
             self.load_accounts()
 
     def open_edit_account_dialog(self, row):
+        print(self.table_widget.model._all_data)
         account_data = self.table_widget.model._all_data[row]
         dialog = AccountDialog(self.main_window, account_data=account_data)
         dialog.exec_()

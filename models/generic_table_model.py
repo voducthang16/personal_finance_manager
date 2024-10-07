@@ -1,11 +1,12 @@
 from PyQt5.QtCore import QAbstractTableModel, Qt, QVariant
 
 class GenericTableModel(QAbstractTableModel):
-    def __init__(self, headers=None, data=None, page_size=10):
+    def __init__(self, headers=None, data=None, page_size=10, column_mapping=None):
         super().__init__()
         self.headers = headers or []
         self._all_data = data or []
         self.page_size = page_size
+        self.column_mapping = column_mapping or {}
         self.current_page = 0
         self.update_current_page_data()
 
@@ -28,7 +29,8 @@ class GenericTableModel(QAbstractTableModel):
 
         if role == Qt.DisplayRole:
             if index.column() < len(self.headers):
-                return self._page_data[index.row()][index.column()]
+                # Trả về giá trị tương ứng với cột từ column_mapping
+                return self._page_data[index.row()].get(self.column_mapping.get(index.column(), ""), "")
             else:
                 return ""
 
