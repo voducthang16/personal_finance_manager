@@ -4,7 +4,8 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 
-from widgets.scrollabe_widget import ScrollableWidget  # Import the ScrollableWidget
+from widgets.scrollabe_widget import ScrollableWidget
+
 
 class TableWidget(QWidget):
     def __init__(self, parent=None):
@@ -110,11 +111,12 @@ class TableWidget(QWidget):
         self.rows_layout.addWidget(row)
 
     def clear_rows(self):
-        """Clear all rows, but keep the empty label intact."""
-        while self.rows_layout.count() > 1:
-            child = self.rows_layout.takeAt(1)
-            if child.widget():
-                child.widget().deleteLater()
+        """Clear all rows, but keep the header and empty label intact."""
+        for i in reversed(range(self.rows_layout.count())):
+            widget = self.rows_layout.itemAt(i).widget()
+            if widget in [self.header, self.empty_label]:
+                continue
+            self.rows_layout.takeAt(i).widget().deleteLater()
 
     def set_data(self, headers, data):
         """Populate the table with headers and rows."""
