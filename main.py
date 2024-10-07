@@ -193,7 +193,7 @@ class MainWindow(QMainWindow):
             balance = data['balance']
             try:
                 self.db_manager.add_account(user_id, account_name, balance)
-                # call initialize def at current screen here for me
+                self.display_screen(("Tài Khoản"))
             except sqlite3.Error as e:
                 print(e)
 

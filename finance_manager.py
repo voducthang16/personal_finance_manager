@@ -100,12 +100,23 @@ class FinanceManager:
             print(f"Lỗi khi cập nhật người dùng: {e}")
             raise e
 
-    def get_accounts_for_user(self, user_id):
+    def get_accounts_for_user(self, user_id, limit, offset):
         """Lấy danh sách tài khoản của người dùng"""
         self.cursor.execute("""
-        SELECT * FROM accounts WHERE user_id = ?
-        """, (user_id,))
+        SELECT * FROM accounts WHERE user_id = ? LIMIT ? OFFSET ?
+        """, (user_id, limit, offset))
         return self.cursor.fetchall()
+
+    def count_accounts_for_user(self, user_id):
+        """
+        Đếm tổng số tài khoản của người dùng.
+        :param user_id: ID của người dùng.
+        :return: Tổng số tài khoản.
+        """
+        self.cursor.execute("""
+        SELECT COUNT(*) FROM accounts WHERE user_id = ?
+        """, (user_id,))
+        return self.cursor.fetchone()[0]
 
     # Thêm tài khoản cho người dùng
     def add_account(self, user_id, account_name, balance=0):

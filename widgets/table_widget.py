@@ -1,130 +1,127 @@
-from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QFrame, QLabel, QSizePolicy
-)
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
-
-from widgets.scrollabe_widget import ScrollableWidget
-
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableView, QPushButton, QLabel, QHBoxLayout, QHeaderView
+from models.generic_table_model import GenericTableModel
 
 class TableWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, page_size=10):
         super().__init__(parent)
+        self.page_size = page_size
 
         # Main layout
-        self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
-        self.main_layout.setSpacing(0)
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(5)
 
-        # Create a widget to hold the rows
-        self.rows_container = QWidget(self)  # Ensure rows_container has a parent
-        self.rows_layout = QVBoxLayout(self.rows_container)
-        self.rows_layout.setContentsMargins(0, 0, 0, 0)
-        self.rows_layout.setSpacing(0)
-        self.rows_layout.setAlignment(Qt.AlignTop)
+        # QTableView
+        self.table_view = QTableView()
+        self.model = GenericTableModel(page_size=self.page_size)
+        self.table_view.setModel(self.model)
+        self.table_view.setSelectionBehavior(QTableView.SelectRows)
+        self.table_view.setAlternatingRowColors(True)
 
-        # Use ScrollableWidget to wrap the rows_container
-        self.scrollable_widget = ScrollableWidget(self.rows_container)
-        self.main_layout.addWidget(self.scrollable_widget)
-
-        # Initialize header and empty label as None
-        self.header = None
-        self.empty_label = None
-
-    def initialize(self):
-        """Ensure the table and its widgets are properly reinitialized when switching screens."""
-        self.clear_rows()
-
-        # Create empty_label if it doesn't exist
-        if self.empty_label is None:
-            self.empty_label = QLabel("No Data", self.rows_container)
-            self.empty_label.setStyleSheet("""
-                color: #ffffff;
-                margin-top: 10px;
-            """)
-            self.empty_label.setFont(QFont("Arial", 20))
-            self.empty_label.setAlignment(Qt.AlignCenter)
-            self.rows_layout.addWidget(self.empty_label)
-
-        self.empty_label.setVisible(False)  # Initially hidden
-
-    def add_header(self, headers):
-        """Add a header to the table, removing the old one if it exists."""
-        if self.header is not None:
-            self.header.deleteLater()  # Remove the old header if it exists
-
-        self.header = QFrame(self)
-        self.header.setFixedHeight(50)
-        self.header.setStyleSheet("""
-            QFrame {
-                background-color: #333333;
-                border-radius: 0;
-                border-top-left-radius: 10px;
-                border-top-right-radius: 10px;
+        # Custom style for QTableView
+        self.table_view.setStyleSheet("""
+            QTableView {
+                background-color: #1d1f21;  /* Nền màu đen nhạt */
+                color: #c5c8c6;  /* Màu chữ xám nhạt */
+                gridline-color: #282a2e;  /* Màu đường kẻ */
+                border: 1px solid #373b41;  /* Đường viền màu xám đậm */
+                font-size: 14px;  /* Kích thước chữ */
             }
-            QLabel {
-                font-weight: bold;
-                color: #FFFFFF;
-                padding: 10px;
+            QHeaderView::section {
+                background-color: #282a2e;  /* Nền tiêu đề */
+                color: #ffffff;  /* Màu chữ tiêu đề */
+                padding: 4px;  /* Khoảng cách trong tiêu đề */
+                border: none;  /* Bỏ viền */
+                font-weight: bold;  /* Chữ đậm cho tiêu đề */
+            }
+            QHeaderView::section:first {
+                border-top-left-radius: 10px;  /* Bo góc trái trên cùng */
+            }
+            QHeaderView::section:last {
+                border-top-right-radius: 10px;  /* Bo góc phải trên cùng */
+            }
+            QTableView::item {
+                padding: 10px;  /* Khoảng cách giữa các mục */
+            }
+            QTableView::item:selected {
+                background-color: #373b41;  /* Màu nền khi được chọn */
+                color: #ffffff;  /* Màu chữ khi được chọn */
+            }
+            QScrollBar:vertical {
+                background-color: #282a2e;  /* Nền thanh cuộn */
+                width: 12px;  /* Độ rộng thanh cuộn */
+            }
+            QScrollBar::handle:vertical {
+                background-color: #373b41;  /* Màu thanh kéo */
+                min-height: 20px;  /* Chiều cao tối thiểu */
+                border-radius: 6px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background-color: #4e5358;  /* Màu thanh kéo khi hover */
             }
         """)
-        header_layout = QHBoxLayout(self.header)
-        header_layout.setContentsMargins(10, 0, 10, 0)
-        header_layout.setSpacing(20)
 
-        # Add dynamic header labels
-        for header_text in headers:
-            header_label = QLabel(header_text, self)
-            header_label.setFont(QFont("Arial", 14))
-            header_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-            header_layout.addWidget(header_label, alignment=Qt.AlignVCenter)
+        self.table_view.horizontalHeader().setStretchLastSection(True)
+        self.table_view.verticalHeader().setVisible(False)
+        self.layout.addWidget(self.table_view)
 
-        self.rows_layout.insertWidget(0, self.header)  # Insert the header at the top
+        # Pagination controls
+        self.pagination_layout = QHBoxLayout()
+        self.prev_button = QPushButton("Trang Trước")
+        self.next_button = QPushButton("Trang Tiếp")
+        self.page_label = QLabel("Trang 1 / 1")
 
-    def add_row(self, columns):
-        """Add a dynamic row with the column data."""
-        self.empty_label.setVisible(False)  # Hide the empty label if data exists
+        # Kết nối sự kiện nút
+        self.prev_button.clicked.connect(parent.previous_page)  # Kết nối tới AccountScreen
+        self.next_button.clicked.connect(parent.next_page)  # Kết nối tới AccountScreen
 
-        row = QFrame(self)
-        row.setFixedHeight(40)
-        row.setStyleSheet("""
-            QFrame {
-                background-color: #3c3c3c;
-                border-radius: 0;
+        # Thiết lập styles cho nút
+        button_style = """
+            QPushButton {
+                background-color: #3498db;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
             }
-            QLabel {
-                color: #ffffff;
-                padding: 10px;
+            QPushButton:hover {
+                background-color: #2980b9;
             }
-        """)
-        row_layout = QHBoxLayout(row)
-        row_layout.setContentsMargins(10, 0, 10, 0)
-        row_layout.setSpacing(20)
+            QPushButton:disabled {
+                background-color: #7f8c8d;
+            }
+        """
+        self.prev_button.setStyleSheet(button_style)
+        self.next_button.setStyleSheet(button_style)
 
-        # Add dynamic column labels
-        for column_text in columns:
-            column_label = QLabel(column_text, self)
-            column_label.setFont(QFont("Arial", 13))
-            column_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-            row_layout.addWidget(column_label, alignment=Qt.AlignVCenter)
+        # Thêm các widget vào layout phân trang
+        self.pagination_layout.addWidget(self.prev_button)
+        self.pagination_layout.addStretch()
+        self.pagination_layout.addWidget(self.page_label)
+        self.pagination_layout.addStretch()
+        self.pagination_layout.addWidget(self.next_button)
 
-        self.rows_layout.addWidget(row)
+        self.layout.addLayout(self.pagination_layout)
 
-    def clear_rows(self):
-        """Clear all rows, but keep the header and empty label intact."""
-        for i in reversed(range(self.rows_layout.count())):
-            widget = self.rows_layout.itemAt(i).widget()
-            if widget in [self.header, self.empty_label]:
-                continue
-            self.rows_layout.takeAt(i).widget().deleteLater()
+    def set_data(self, headers, data, column_widths=None):
+        """Thiết lập dữ liệu cho bảng."""
+        self.model.headers = headers
+        self.model.update_data(data)
 
-    def set_data(self, headers, data):
-        """Populate the table with headers and rows."""
-        self.clear_rows()  # Clear previous rows
-        if not data:
-            self.empty_label.setVisible(True)  # Show the empty label if no data exists
-        else:
-            self.empty_label.setVisible(False)  # Hide the empty label if data is present
-            self.add_header(headers)  # Add the header
-            for row_data in data:
-                self.add_row(row_data)  # Add the rows
+        if column_widths:
+            for i, width in enumerate(column_widths):
+                if i < len(headers):
+                    if width == 'auto':
+                        self.table_view.horizontalHeader().setSectionResizeMode(i, QHeaderView.ResizeToContents)  # Auto width
+                    elif width == 'stretch':
+                        self.table_view.horizontalHeader().setSectionResizeMode(i, QHeaderView.Stretch)  # Flexible width
+                    else:
+                        self.table_view.setColumnWidth(i, width)  # Fixed width
+
+    def update_pagination(self, current_page, total_pages):
+        """Cập nhật thông tin phân trang dựa trên dữ liệu từ AccountScreen."""
+        self.page_label.setText(f"Trang {current_page} / {total_pages}")
+
+        # Cập nhật trạng thái của nút phân trang
+        self.prev_button.setEnabled(current_page > 1)
+        self.next_button.setEnabled(current_page < total_pages)
