@@ -75,7 +75,7 @@ class MainWindow(QMainWindow):
         """)
 
         # init screens
-        self.dashboard_screen = DashboardScreen(parent=self)
+        self.dashboard_screen = DashboardScreen(main_window=self)
         self.transaction_screen = TransactionScreen(main_window=self)
         self.setting_screen = SettingScreen(main_window=self)
         self.account_screen = AccountScreen(main_window=self)

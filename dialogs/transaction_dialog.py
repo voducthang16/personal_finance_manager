@@ -18,15 +18,10 @@ class TransactionDialog(BaseDialog):
         self.parent = parent
         self.db_manager = db_manager
         self.accounts = []  # Placeholder for account data
-        self.categories = [
-            {"category_id": 1, "category_name": "Đồ ăn", "category_type": "Chi tiêu"},
-            {"category_id": 2, "category_name": "Giải trí", "category_type": "Chi tiêu"},
-            {"category_id": 3, "category_name": "Lương", "category_type": "Thu nhập"},
-            {"category_id": 4, "category_name": "Vay", "category_type": "Vay nợ"},
-            # Add more hard-coded categories as needed
-        ]
+        self.categories = []  # Placeholder for categories
         self.setup_transaction_fields()
         self.populate_accounts()  # Populate accounts from the database
+        self.populate_categories()  # Populate categories from the database
         if self.transaction_data:
             self.populate_data()
 
@@ -45,7 +40,6 @@ class TransactionDialog(BaseDialog):
 
         # Hạng mục dropdown
         self.category_combo = QComboBox()
-        self.populate_categories()
         self.add_content(self.create_row("Hạng mục:", self.category_combo))
 
         # Diễn giải input field
@@ -66,19 +60,18 @@ class TransactionDialog(BaseDialog):
     def populate_accounts(self):
         """Lấy danh sách tài khoản từ cơ sở dữ liệu và thêm vào dropdown."""
         self.account_combo.clear()
-
         user_id = self.parent.user_info['user_id']  # Lấy user_id từ thông tin người dùng
-        limit = 100  # Giới hạn số tài khoản lấy về, có thể thay đổi tùy theo yêu cầu
+        limit = 100  # Giới hạn số tài khoản lấy về
         offset = 0  # Thay đổi offset nếu cần thiết để phân trang
 
         accounts = self.db_manager.get_accounts_for_user(user_id, limit, offset)  # Gọi phương thức với đủ tham số
-        print(accounts)
-        # for account in accounts:
-        #     self.account_combo.addItem(account['account_name'], account['account_id'])
+        for account in accounts:
+            self.account_combo.addItem(account['account_name'], account['account_id'])
 
     def populate_categories(self):
-        """Thêm hạng mục vào dropdown từ danh sách hard-coded."""
+        """Lấy danh sách các danh mục từ cơ sở dữ liệu và thêm vào dropdown."""
         self.category_combo.clear()
+        self.categories = self.db_manager.get_categories()  # Gọi phương thức để lấy danh mục từ DB
         for category in self.categories:
             self.category_combo.addItem(category['category_name'], category['category_id'])
 
@@ -144,7 +137,9 @@ class TransactionDialog(BaseDialog):
                 account
             )
         else:  # Nếu không có dữ liệu giao dịch, thực hiện thêm mới
+            user_id = self.parent.user_info['user_id']
             self.db_manager.add_transaction(
+                user_id=user_id,
                 account_id=self.account_combo.currentData(),  # Lấy account_id từ dropdown
                 category_id=self.category_combo.currentData(),  # Lấy category_id từ dropdown
                 amount=amount,

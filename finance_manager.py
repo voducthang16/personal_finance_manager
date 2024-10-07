@@ -174,6 +174,20 @@ class FinanceManager:
         except sqlite3.Error as e:
             print(f"Lỗi khi thêm danh mục: {e}")
 
+    def get_categories(self):
+        """Lấy danh sách tất cả các danh mục."""
+        self.cursor.execute("SELECT * FROM categories")
+        # Lấy tên cột
+        columns = [column[0] for column in self.cursor.description]
+
+        # Chuyển đổi mỗi hàng từ tuple sang dict
+        categories = []
+        for row in self.cursor.fetchall():
+            category_dict = dict(zip(columns, row))
+            categories.append(category_dict)
+
+        return categories
+
     # Thêm giao dịch mới
     def add_transaction(self, user_id, account_id, category_id, amount, transaction_type, description, date):
         try:
@@ -217,6 +231,27 @@ class FinanceManager:
             self.conn.commit()
         except sqlite3.Error as e:
             print(f"Lỗi khi xoá giao dịch: {e}")
+
+    def get_transactions_from_start_of_october(self, user_id):
+        """Lấy giao dịch từ đầu tháng 10 cho người dùng."""
+        self.cursor.execute("""
+        SELECT * FROM transactions 
+        WHERE user_id = ? AND created_at >= '2024-10-01' 
+        ORDER BY created_at DESC;
+        """, (user_id,))
+        return self.cursor.fetchall()
+
+    def get_category_statistics_from_start_of_october(self, user_id):
+        """Lấy thống kê số tiền theo danh mục từ đầu tháng 10 cho người dùng."""
+        self.cursor.execute("""
+        SELECT categories.category_name, SUM(transactions.amount) as total_amount
+        FROM transactions 
+        JOIN categories ON transactions.category_id = categories.category_id
+        WHERE transactions.user_id = ? AND transactions.created_at >= '2024-10-01'
+        GROUP BY categories.category_name
+        ORDER BY total_amount DESC;
+        """, (user_id,))
+        return self.cursor.fetchall()
 
     # Đóng kết nối cơ sở dữ liệu
     def close(self):

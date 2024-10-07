@@ -8,7 +8,7 @@ class AccountScreen(QWidget):
         super().__init__(main_window)
         self.main_window = main_window
         self.setContentsMargins(10, 0, 10, 0)
-        self.page_size = 10  # Số lượng bản ghi trên mỗi trang
+        self.page_size = 2  # Số lượng bản ghi trên mỗi trang
         self.current_page = 0  # Bắt đầu từ trang 0
         self.total_pages = 1  # Tổng số trang ban đầu (sẽ tính sau)
 
