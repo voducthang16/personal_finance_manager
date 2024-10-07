@@ -130,17 +130,17 @@ class FinanceManager:
             print(f"Lỗi khi thêm tài khoản: {e}")
 
     # New method to edit an account
-    def edit_account(self, account_id, account_name, balance):
+    def update_account(self, account_id, account_name, balance):
         try:
             self.cursor.execute("""
-                UPDATE accounts 
+                UPDATE accounts
                 SET account_name = ?, balance = ?
                 WHERE account_id = ?
             """, (account_name, balance, account_id))
             self.conn.commit()
         except sqlite3.Error as e:
-            print(f"Lỗi khi chỉnh sửa tài khoản: {e}")
-            raise e  # Re-raise exception for higher-level handling
+            print(f"Error updating account: {e}")
+            self.conn.rollback()
 
     # New method to delete an account
     def delete_account(self, account_id):

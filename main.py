@@ -186,16 +186,7 @@ class MainWindow(QMainWindow):
 
     def open_add_account_dialog(self):
         dialog = AccountDialog(self)
-        if dialog.exec_() == QDialog.Accepted:
-            data = dialog.get_account_data()
-            user_id = self.user_info['user_id']
-            account_name = data['account_name']
-            balance = data['balance']
-            try:
-                self.db_manager.add_account(user_id, account_name, balance)
-                self.display_screen(("Tài Khoản"))
-            except sqlite3.Error as e:
-                print(e)
+        dialog.exec_()
 
     def display_screen(self, menu_name):
         widget = self.screens.get(menu_name)

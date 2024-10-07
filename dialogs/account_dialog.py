@@ -1,5 +1,3 @@
-# account_dialog.py
-
 from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtGui import QDoubleValidator
 
@@ -7,11 +5,13 @@ from dialogs.base_dialog import BaseDialog
 
 
 class AccountDialog(BaseDialog):
-    def __init__(self, parent=None, account_data=None):
-        title = "Thêm Tài Khoản" if account_data is None else "Sửa Tài Khoản"
+    def __init__(self, main_window=None, account_data=None):
+        self.account_id = account_data[0] if account_data else None
+        title = "Sửa Tài Khoản" if self.account_id else "Thêm Tài Khoản"
         width = 600
         height = 600
-        super().__init__(parent, title=title, width=width, height=height)
+        super().__init__(main_window, title=title, width=width, height=height)
+        self.main_window = main_window
         self.account_data = account_data
         self.setup_account_fields()
         if self.account_data:
@@ -38,6 +38,7 @@ class AccountDialog(BaseDialog):
         }
 
     def submit(self):
+        """Xử lý khi người dùng nhấn nút Lưu."""
         data = self.get_account_data()
         account_name = data["account_name"]
         balance = data["balance"]
@@ -47,13 +48,26 @@ class AccountDialog(BaseDialog):
             return
 
         try:
-            self.balance = float(balance)
+            balance_float = float(balance.replace(",", "").replace(" VND", ""))
         except ValueError:
-            self.show_error_message("Lỗi", "Số dư phải là một số.")
+            self.show_error_message("Lỗi", "Số dư phải là một số hợp lệ.")
             return
 
-        super().submit()
+        if self.account_id:
+            self.main_window.db_manager.update_account(self.account_id, account_name, balance_float)
+        else:
+            user_id = self.main_window.user_info['user_id']
+            self.main_window.db_manager.add_account(user_id, account_name, balance_float)
+
+        self.main_window.display_screen("Tài Khoản")
+        self.accept()
 
     def populate_data(self):
-        self.account_name_input.setText(self.account_data.get("account_name", ""))
-        self.balance_input.setText(f"{self.account_data.get('balance', 0):.2f}")
+        """Điền dữ liệu vào các trường trong dialog khi chỉnh sửa tài khoản."""
+        account_name = self.account_data[1]  # Tên tài khoản là phần tử đầu tiên
+        balance = self.account_data[2]  # Số dư là phần tử thứ hai
+        # Remove commas and ' VND' to make it compatible with float conversion
+        balance_clean = balance.replace(",", "").replace(" VND", "")
+
+        self.account_name_input.setText(account_name)
+        self.balance_input.setText(balance_clean)  # Hiển thị số dư dạng số

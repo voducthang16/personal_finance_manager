@@ -1,10 +1,17 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableView, QPushButton, QLabel, QHBoxLayout, QHeaderView
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableView, QLabel, QHeaderView, QHBoxLayout
+from PyQt5.QtWidgets import QPushButton
+
 from models.generic_table_model import GenericTableModel
+from widgets.action_widget import ActionWidget
 
 class TableWidget(QWidget):
-    def __init__(self, parent=None, page_size=10):
-        super().__init__(parent)
+    def __init__(self, main_window=None, current_screen=None, page_size=10, edit_dialog=None, delete_dialog=None):
+        super().__init__(current_screen)
+        self.main_window = main_window
+        self.current_screen = current_screen
         self.page_size = page_size
+        self.edit_dialog = edit_dialog
+        self.delete_dialog = delete_dialog
 
         # Main layout
         self.layout = QVBoxLayout(self)
@@ -34,6 +41,7 @@ class TableWidget(QWidget):
                 border: none;  /* Bỏ viền */
                 font-weight: bold;  /* Chữ đậm cho tiêu đề */
             }
+            /* Tùy chỉnh border-radius cho mục đầu tiên và cuối cùng */
             QHeaderView::section:first {
                 border-top-left-radius: 10px;  /* Bo góc trái trên cùng */
             }
@@ -41,7 +49,9 @@ class TableWidget(QWidget):
                 border-top-right-radius: 10px;  /* Bo góc phải trên cùng */
             }
             QTableView::item {
-                padding: 10px;  /* Khoảng cách giữa các mục */
+                padding: 0px;  /* Reset padding for items */
+                margin: 0px;   /* Reset margin for items */
+                background-color: #1d1f21;
             }
             QTableView::item:selected {
                 background-color: #373b41;  /* Màu nền khi được chọn */
@@ -72,8 +82,8 @@ class TableWidget(QWidget):
         self.page_label = QLabel("Trang 1 / 1")
 
         # Kết nối sự kiện nút
-        self.prev_button.clicked.connect(parent.previous_page)  # Kết nối tới AccountScreen
-        self.next_button.clicked.connect(parent.next_page)  # Kết nối tới AccountScreen
+        self.prev_button.clicked.connect(self.current_screen.previous_page)
+        self.next_button.clicked.connect(self.current_screen.next_page)
 
         # Thiết lập styles cho nút
         button_style = """
@@ -108,6 +118,16 @@ class TableWidget(QWidget):
         self.model.headers = headers
         self.model.update_data(data)
 
+        for row in range(self.model.rowCount()):
+            action_widget = ActionWidget(
+                parent=self.table_view,
+                edit_callback=self.edit_dialog,
+                delete_callback=self.delete_dialog,
+                row=row,
+            )
+            self.table_view.setRowHeight(row, 40)
+            self.table_view.setIndexWidget(self.model.index(row, len(headers)), action_widget)
+
         if column_widths:
             for i, width in enumerate(column_widths):
                 if i < len(headers):
@@ -125,3 +145,8 @@ class TableWidget(QWidget):
         # Cập nhật trạng thái của nút phân trang
         self.prev_button.setEnabled(current_page > 1)
         self.next_button.setEnabled(current_page < total_pages)
+
+    def handle_action(self, callback, row):
+        """Xử lý hành động với callback động"""
+        if callback:
+            callback(row)  # Gọi hàm callback với row hiện tại

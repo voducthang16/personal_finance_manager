@@ -1,4 +1,3 @@
-# models/generic_table_model.py
 from PyQt5.QtCore import QAbstractTableModel, Qt, QVariant
 
 class GenericTableModel(QAbstractTableModel):
@@ -20,14 +19,18 @@ class GenericTableModel(QAbstractTableModel):
         return len(self._page_data)
 
     def columnCount(self, parent=None):
-        return len(self.headers)
+        # Thêm một cột cho Action (Edit/Delete)
+        return len(self.headers) + 1  # +1 vì thêm cột "Action"
 
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
             return QVariant()
 
         if role == Qt.DisplayRole:
-            return self._page_data[index.row()][index.column()]
+            if index.column() < len(self.headers):
+                return self._page_data[index.row()][index.column()]
+            else:
+                return ""
 
         return QVariant()
 
@@ -36,6 +39,8 @@ class GenericTableModel(QAbstractTableModel):
             if orientation == Qt.Horizontal:
                 if section < len(self.headers):
                     return self.headers[section]
+                else:
+                    return "Action"
             else:
                 return section + 1
         return QVariant()
