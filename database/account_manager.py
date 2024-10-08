@@ -1,5 +1,7 @@
 import sqlite3
 
+from utils import tuples_to_dicts
+
 
 class AccountManager:
     def __init__(self, cursor):
@@ -42,12 +44,12 @@ class AccountManager:
         self.cursor.execute("""
         SELECT * FROM accounts WHERE user_id = ? LIMIT ? OFFSET ?
         """, (user_id, limit, offset))
+
         columns = [column[0] for column in self.cursor.description]
-        accounts = []
-        for row in self.cursor.fetchall():
-            account_dict = dict(zip(columns, row))
-            accounts.append(account_dict)
-        return accounts
+        accounts_tuples = self.cursor.fetchall()
+
+        # Convert tuples to dicts using the utility function
+        return tuples_to_dicts(accounts_tuples, columns)
 
     def count_accounts_for_user(self, user_id):
         self.cursor.execute("""

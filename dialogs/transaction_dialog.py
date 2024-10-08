@@ -64,14 +64,14 @@ class TransactionDialog(BaseDialog):
         limit = 100  # Giới hạn số tài khoản lấy về
         offset = 0  # Thay đổi offset nếu cần thiết để phân trang
 
-        accounts = self.db_manager.get_accounts_for_user(user_id, limit, offset)  # Gọi phương thức với đủ tham số
+        accounts = self.db_manager.account_manager.get_accounts_for_user(user_id, limit, offset)  # Gọi phương thức với đủ tham số
         for account in accounts:
             self.account_combo.addItem(account['account_name'], account['account_id'])
 
     def populate_categories(self):
         """Lấy danh sách các danh mục từ cơ sở dữ liệu và thêm vào dropdown."""
         self.category_combo.clear()
-        self.categories = self.db_manager.get_categories()  # Gọi phương thức để lấy danh mục từ DB
+        self.categories = self.db_manager.category_manager.get_categories()  # Gọi phương thức để lấy danh mục từ DB
         for category in self.categories:
             self.category_combo.addItem(category['category_name'], category['category_id'])
 
