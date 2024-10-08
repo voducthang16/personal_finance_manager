@@ -61,7 +61,7 @@ class BaseDialog(QDialog):
 
             QDateEdit::down-arrow,
             QComboBox::down-arrow {
-                image: url('down_arrow.png');
+                image: url('assets/down_arrow.png');
                 width: 10px;
                 height: 10px;
                 margin: 0px;

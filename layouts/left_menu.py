@@ -1,8 +1,10 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton
 from PyQt5.QtCore import pyqtSignal
 
+from constants import SCREEN_NAMES
+
+
 class LeftMenuWidget(QWidget):
-    # Tín hiệu phát ra khi một nút menu được nhấn
     menu_clicked = pyqtSignal(str)
 
     def __init__(self):
@@ -45,8 +47,13 @@ class LeftMenuWidget(QWidget):
         menu_layout.setSpacing(0)
 
         # Danh sách các mục menu
-        self.menu_items = ["Tổng Quan", "Giao Dịch", "Cài Đặt", "Tài Khoản", "Liên hệ"]
-        self.buttons = {}  # Lưu trữ các nút với tên menu
+        self.menu_items = [
+            SCREEN_NAMES["DASHBOARD"],
+            SCREEN_NAMES["TRANSACTION"],
+            SCREEN_NAMES["ACCOUNT"],
+            SCREEN_NAMES["SETTING"],
+        ]
+        self.buttons = {}
 
         for item in self.menu_items:
             button = QPushButton(item)

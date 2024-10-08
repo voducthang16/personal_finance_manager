@@ -5,11 +5,12 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 
-from dialogs import AccountDialog, TransactionDialog
+from constants import SCREEN_NAMES
+from database import FinanceManager
+from widgets import ScrollableWidget
 from layouts.left_menu import LeftMenuWidget
+from dialogs import AccountDialog, TransactionDialog
 from screens import DashboardScreen, AccountScreen, SettingScreen, TransactionScreen
-from widgets.scrollabe_widget import ScrollableWidget
-from database.finance_manager import FinanceManager
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -88,10 +89,10 @@ class MainWindow(QMainWindow):
 
         # Lưu trữ các màn hình trong từ điển
         self.screens = {
-            "Tổng Quan": self.scrollable_dashboard,
-            "Giao Dịch": self.scrollable_transaction,
-            "Cài Đặt": self.setting_screen,
-            "Tài Khoản": self.account_screen,
+            SCREEN_NAMES["DASHBOARD"]: self.scrollable_dashboard,
+            SCREEN_NAMES["TRANSACTION"]: self.scrollable_transaction,
+            SCREEN_NAMES["ACCOUNT"]: self.account_screen,
+            SCREEN_NAMES["SETTING"]: self.setting_screen,
         }
 
         # Thêm top_info_widget và stacked_widget vào right_layout
