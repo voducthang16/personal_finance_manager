@@ -1,17 +1,15 @@
-import sqlite3
 import sys
 from PyQt5.QtWidgets import (
     QMainWindow, QApplication, QDesktopWidget, QWidget,
-    QHBoxLayout, QVBoxLayout, QStackedWidget, QLabel, QPushButton, QDialog
+    QHBoxLayout, QVBoxLayout, QStackedWidget, QLabel, QPushButton
 )
 from PyQt5.QtCore import Qt
 
-from dialogs.account_dialog import AccountDialog
+from dialogs import AccountDialog, TransactionDialog
 from layouts.left_menu import LeftMenuWidget
 from screens import DashboardScreen, AccountScreen, SettingScreen, TransactionScreen
 from widgets.scrollabe_widget import ScrollableWidget
-from dialogs.transaction_dialog import TransactionDialog
-from finance_manager import FinanceManager
+from database.finance_manager import FinanceManager
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -219,7 +217,7 @@ class MainWindow(QMainWindow):
         self.move(qr.topLeft())
 
     def get_user_info(self):
-        user = self.db_manager.get_first_user()
+        user = self.db_manager.user_manager.get_first_user()
         if not user:
             self.user_info = None
         else:

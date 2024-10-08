@@ -54,10 +54,10 @@ class AccountDialog(BaseDialog):
             return
 
         if self.account_id:
-            self.main_window.db_manager.update_account(self.account_id, account_name, balance_float)
+            self.main_window.db_manager.account_manager.update_account(self.account_id, account_name, balance_float)
         else:
             user_id = self.main_window.user_info['user_id']
-            self.main_window.db_manager.add_account(user_id, account_name, balance_float)
+            self.main_window.db_manager.account_manager.add_account(user_id, account_name, balance_float)
 
         self.main_window.display_screen("Tài Khoản")
         self.accept()

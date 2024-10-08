@@ -8,7 +8,7 @@ class AccountScreen(QWidget):
         super().__init__(main_window)
         self.main_window = main_window
         self.setContentsMargins(10, 0, 10, 0)
-        self.page_size = 2  # Số lượng bản ghi trên mỗi trang
+        self.page_size = 3  # Số lượng bản ghi trên mỗi trang
         self.current_page = 0  # Bắt đầu từ trang 0
         self.total_pages = 1  # Tổng số trang ban đầu (sẽ tính sau)
 
@@ -56,14 +56,14 @@ class AccountScreen(QWidget):
     def load_total_pages(self):
         """Tính tổng số trang dựa trên tổng số tài khoản và kích thước trang."""
         user_id = self.main_window.user_info['user_id']
-        total_accounts = self.main_window.db_manager.count_accounts_for_user(user_id)
+        total_accounts = self.main_window.db_manager.account_manager.count_accounts_for_user(user_id)
         self.total_pages = (total_accounts + self.page_size - 1) // self.page_size
 
     def load_accounts(self):
         """Load account data and populate the table."""
         user_id = self.main_window.user_info['user_id']
         offset = self.current_page * self.page_size
-        accounts_raw = self.main_window.db_manager.get_accounts_for_user(user_id, self.page_size, offset)
+        accounts_raw = self.main_window.db_manager.account_manager.get_accounts_for_user(user_id, self.page_size, offset)
         accounts_formatted = self.format_accounts_data(accounts_raw)
 
         headers = ["Tên Tài Khoản", "Số Dư", "Cập Nhật Lần Cuối"]

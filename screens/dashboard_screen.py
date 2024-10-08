@@ -152,7 +152,7 @@ class DashboardScreen(QWidget):
     def generate_transaction_statistics(self):
         """Tạo thống kê giao dịch và vẽ biểu đồ."""
         user_id = self.main_window.user_info['user_id']  # Lấy user_id từ thông tin người dùng
-        transactions = self.main_window.db_manager.get_transactions_from_start_of_october(user_id)
+        transactions = self.main_window.db_manager.transaction_manager.get_transactions_from_start_of_october(user_id)
 
         # Tính tổng số tiền theo loại giao dịch
         transaction_stats = defaultdict(float)
@@ -189,7 +189,7 @@ class DashboardScreen(QWidget):
     def generate_category_statistics(self):
         """Tạo thống kê danh mục và vẽ biểu đồ pie."""
         user_id = self.main_window.user_info['user_id']  # Lấy user_id từ thông tin người dùng
-        category_stats = self.main_window.db_manager.get_category_statistics_from_start_of_october(user_id)
+        category_stats = self.main_window.db_manager.transaction_manager.get_category_statistics_from_start_of_october(user_id)
 
         # Tạo dữ liệu cho biểu đồ
         labels = [category[0] for category in category_stats]  # Tên danh mục
