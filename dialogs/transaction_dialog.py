@@ -3,7 +3,6 @@ from PyQt5.QtCore import QDate
 from PyQt5.QtGui import QDoubleValidator
 
 from dialogs.base_dialog import BaseDialog
-from utils.toast import QToast
 
 
 class TransactionDialog(BaseDialog):
@@ -96,7 +95,6 @@ class TransactionDialog(BaseDialog):
         }
 
     def submit(self):
-        """Xử lý khi người dùng nhấn nút Lưu."""
         data = self.get_transaction_data()
         amount = data["amount"]
         transaction_type = data["type"]
@@ -105,38 +103,26 @@ class TransactionDialog(BaseDialog):
         date = data["date"]
         account = data["account"]
 
-        # Kiểm tra các trường bắt buộc
         if not amount or not transaction_type or not category or not account:
-            self.toast(
-                title="Cảnh báo",
-                message="Vui lòng nhập đầy đủ thông tin.",
-                toast_type=QToast.WARNING,
-                duration=3000
-            )
+            self.show_error_message("Vui lòng nhập đầy đủ thông tin")
             return
 
         try:
             self.amount = float(amount)
         except ValueError:
-            self.toast(
-                title="Lỗi",
-                message="Số tiền phải là một số hợp lệ.",
-                toast_type=QToast.ERROR,
-                duration=3000
-            )
+            self.show_error_message("Số tiền phải là một số hợp lệ")
             return
 
-        # Nếu mọi thứ đều hợp lệ, bạn có thể xử lý dữ liệu ở đây
-        if self.transaction_data:  # Nếu có dữ liệu giao dịch hiện tại, thực hiện cập nhật
+        if self.transaction_data:
             self.db_manager.update_transaction(
-                self.transaction_data['transaction_id'],  # Giả định bạn có ID giao dịch
+                self.transaction_data['transaction_id'],
                 amount,
                 transaction_type,
                 description,
                 date,
                 account
             )
-        else:  # Nếu không có dữ liệu giao dịch, thực hiện thêm mới
+        else:
             user_id = self.parent.user_info['user_id']
             self.db_manager.add_transaction(
                 user_id=user_id,
@@ -151,7 +137,6 @@ class TransactionDialog(BaseDialog):
         self.accept()
 
     def populate_data(self):
-        """Điền dữ liệu vào các trường trong dialog khi chỉnh sửa giao dịch."""
         self.amount_input.setText(str(self.transaction_data.get("amount", "")))
         self.type_combo.setCurrentText(self.transaction_data.get("transaction_type", "Chi tiêu"))
         self.populate_categories()

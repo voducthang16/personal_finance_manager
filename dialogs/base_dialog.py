@@ -1,9 +1,7 @@
 from PyQt5.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QWidget
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QWidget, QMessageBox
 )
 from PyQt5.QtCore import Qt
-
-from utils.toast import QToast
 
 
 class BaseDialog(QDialog):
@@ -13,7 +11,6 @@ class BaseDialog(QDialog):
         self.width = width
         self.height = height
         self.setup_ui()
-        self.current_toast = None  # Reference to the current toast
 
     def setup_ui(self):
         # Thiết lập kích thước cửa sổ
@@ -181,19 +178,50 @@ class BaseDialog(QDialog):
         row_widget.setLayout(row_layout)
         return row_widget
 
-    def toast(self, title, message, toast_type=QToast.SUCCESS, duration=3000):
-        self.current_toast = QToast(
-            parent=self,
-            title=title,
-            message=message,
-            duration=duration,
-            toast_type=toast_type
-        )
+    def show_message_box(self, title, message, icon_type):
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle(title)
+        msg_box.setText(message)
+        msg_box.setIcon(icon_type)
+        background_color = ""
+        hover_color = ""
+
+        if icon_type == QMessageBox.Information:
+            background_color = '#28a745'
+            hover_color = '#218838'
+        elif icon_type == QMessageBox.Warning:
+            background_color = '#ffc107'
+            hover_color = '#e0a800'
+        elif icon_type == QMessageBox.Critical:
+            background_color = '#dc3545'
+            hover_color = '#c82333'
+
+        style = f"""
+            QPushButton {{
+                background-color: {background_color};
+                color: white;
+                border: none;
+                padding: 4px 0px;
+                border-radius: 6px;
+                min-width: 80px;
+            }}
+            QPushButton:hover {{
+                background-color: {hover_color};
+            }}
+        """
+        msg_box.setStyleSheet(style)
+        msg_box.exec_()
+
+    def show_success_message(self, message):
+        self.show_message_box("Thành công", message, QMessageBox.Information)
+
+    def show_error_message(self, message):
+        self.show_message_box("Lỗi", message, QMessageBox.Critical)
+
+    def show_warning_message(self, message):
+        self.show_message_box("Cảnh báo", message, QMessageBox.Warning)
 
     def add_content(self, widget):
-        """
-        Thêm widget vào phần nội dung trung tâm của dialog.
-        """
         self.content_layout.addWidget(widget)
 
     def submit(self):

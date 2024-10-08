@@ -1,6 +1,5 @@
 from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtGui import QDoubleValidator
-
 from dialogs.base_dialog import BaseDialog
 
 
@@ -44,21 +43,26 @@ class AccountDialog(BaseDialog):
         balance = data["balance"]
 
         if not account_name or not balance:
-            self.show_error_message("Lỗi", "Vui lòng nhập đầy đủ thông tin.")
+            self.show_error_message("Vui lòng nhập đầy đủ thông tin.")
             return
 
         try:
             balance_float = float(balance.replace(",", "").replace(" VND", ""))
         except ValueError:
-            self.show_error_message("Lỗi", "Số dư phải là một số hợp lệ.")
+            self.show_error_message("Số dư phải là một số hợp lệ.")
             return
 
+        # Cập nhật tài khoản nếu có account_id
         if self.account_id:
             self.main_window.db_manager.account_manager.update_account(self.account_id, account_name, balance_float)
+            self.show_success_message("Cập nhật tài khoản thành công.")
         else:
+            # Thêm tài khoản mới
             user_id = self.main_window.user_info['user_id']
             self.main_window.db_manager.account_manager.add_account(user_id, account_name, balance_float)
+            self.show_success_message("Thêm tài khoản thành công.")
 
+        # Chuyển đến màn hình tài khoản và đóng dialog
         self.main_window.display_screen("Tài Khoản")
         self.accept()
 

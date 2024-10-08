@@ -112,7 +112,6 @@ class AccountScreen(QWidget):
             self.load_accounts()
 
     def open_edit_account_dialog(self, row):
-        print(self.table_widget.model._all_data)
         account_data = self.table_widget.model._all_data[row]
         dialog = AccountDialog(self.main_window, account_data=account_data)
         dialog.exec_()
