@@ -1,3 +1,4 @@
+import os
 import sys
 from PyQt5.QtWidgets import (
     QMainWindow, QApplication, QDesktopWidget, QWidget,
@@ -7,6 +8,7 @@ from PyQt5.QtCore import Qt
 
 from constants import SCREEN_NAMES
 from database import FinanceManager
+from layouts import SetupLayout
 from widgets import ScrollableWidget
 from layouts.left_menu import LeftMenuWidget
 from dialogs import AccountDialog, TransactionDialog
@@ -17,7 +19,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setup_window_property()
 
-        self.db_manager = FinanceManager()
+        self.db_manager = None
+        self.initialize_database()
         self.user_info = self.get_user_info()
 
         self.setContentsMargins(10, 10, 10, 10)
@@ -50,6 +53,55 @@ class MainWindow(QMainWindow):
             }
         """)
 
+        if not self.user_info:
+            self.show_setup_screen()
+        else:
+            self.show_main_screen()
+
+    def initialize_database(self):
+        """Hàm kiểm tra và tạo file .db nếu chưa tồn tại."""
+        db_file = 'personal_finance.db'
+        if not os.path.exists(db_file):
+            # Nếu file không tồn tại, tiến hành tạo cơ sở dữ liệu mới
+            print(f"Tạo cơ sở dữ liệu mới: {db_file}")
+            self.db_manager = FinanceManager(db_name=db_file)
+            self.db_manager.create_tables()
+        else:
+            # Nếu cơ sở dữ liệu đã tồn tại, khởi tạo db_manager
+            print(f"Cơ sở dữ liệu đã tồn tại: {db_file}")
+            self.db_manager = FinanceManager(db_name=db_file)
+
+    def show_setup_screen(self):
+        """Hiển thị màn hình thêm người dùng nếu chưa có người dùng"""
+        main_widget = QWidget(self)
+
+        main_widget.setStyleSheet("""
+            background-color: #121212;
+            border-radius: 10px;
+        """)
+
+        main_layout = QVBoxLayout(main_widget)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setAlignment(Qt.AlignCenter)
+
+        setup_screen = SetupLayout(main_window=self)
+        setup_screen_wrapper = QWidget()
+        setup_layout = QVBoxLayout(setup_screen_wrapper)
+        setup_layout.setContentsMargins(0, 0, 0, 0)
+        setup_layout.setAlignment(Qt.AlignCenter)
+
+        setup_screen_wrapper.setStyleSheet("""
+            background-color: #1e1e1e;
+        """)
+
+        setup_layout.addWidget(setup_screen)
+
+        main_layout.addWidget(setup_screen_wrapper)
+
+        self.setCentralWidget(main_widget)
+
+    def show_main_screen(self):
+        """Hiển thị màn hình chính với menu và stacked_widget khi đã có người dùng"""
         # Tạo widget chính và layout chính
         main_widget = QWidget()
         main_layout = QHBoxLayout(main_widget)
@@ -113,7 +165,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(main_widget)
 
         # Hiển thị màn hình mặc định (Trang chủ)
-        self.display_screen("Tổng Quan")
+        self.display_screen(SCREEN_NAMES["DASHBOARD"])
 
     def create_top_layout(self, menu_name):
         if self.top_info_widget:

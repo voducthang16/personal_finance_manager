@@ -117,7 +117,7 @@ class SettingScreen(QWidget):
 
         if self.is_edit_mode:
             try:
-                self.main_window.db_manager.update_user(self.main_window.user_info['user_id'], name, email)
+                self.main_window.db_manager.user_manager.update_user(self.main_window.user_info['user_id'], name, email)
                 self.main_window.user_info = self.main_window.db_manager.get_first_user()
                 # QToast("Thông tin đã được cập nhật thành công!", toast_type=QToast.SUCCESS)
             except sqlite3.Error as e:

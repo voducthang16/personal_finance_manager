@@ -13,7 +13,6 @@ class FinanceManager:
         self.cursor = self.conn.cursor()
         self.create_tables()
 
-        # Initialize managers
         self.user_manager = UserManager(self.cursor)
         self.account_manager = AccountManager(self.cursor)
         self.category_manager = CategoryManager(self.cursor)
