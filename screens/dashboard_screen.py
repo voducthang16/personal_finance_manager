@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QLabel, QVBoxLayout, QFrame, QGridLayout, QWidget, QHBoxLayout
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QLabel, QVBoxLayout, QFrame, QGridLayout, QWidget, QHBoxLayout, QComboBox
+from PyQt5.QtCore import Qt, QDate
 from matplotlib import pyplot as plt
 from collections import defaultdict
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -19,46 +19,135 @@ class DashboardScreen(QWidget):
         # Đẩy các widget lên trên
         self.layout.addStretch()
 
+        # Set default dates to today
+        today = QDate.currentDate()
+        self.start_date = today
+        self.end_date = today
+
     def initialize(self):
-        print("initialize dashboard")
         self.generate_transaction_statistics()
         self.generate_category_statistics()
 
     def create_header(self):
+        # Tạo layout ngang
+        layout = QHBoxLayout()
+
         title = QLabel()
         title.setText("Tổng Quan Tài Chính")
         title.setStyleSheet("""
-            background-color: #292929;
             font-weight: bold;
             font-size: 24px;
         """)
-        self.layout.addWidget(title)
+
+        # Tạo combo_box và kết nối signal
+        self.combo_box = QComboBox()
+        self.combo_box.setContentsMargins(0, 0, 0, 0)
+        self.combo_box.addItems(["Hôm nay", "Tuần này", "Tháng này", "Quý này"])
+        self.setStyleSheet("""
+            QComboBox {
+                height: 30px;
+                max-width: 150px;
+                border: 1px solid #292929;
+                padding-left: 10px;
+                color: #fff;;
+                border-radius: 6px;
+                font-size: 16px;
+            }
+
+            QComboBox::item {
+                height: 20px;
+                padding: 6px;
+                border-radius: 6px;
+            }
+
+            QComboBox::item:selected {
+                background-color: #3a3a3a;
+                color: #fff;
+            }
+
+            QComboBox::drop-down {
+                border: none;
+                background-color: transparent;
+                width: 20px;
+                border-top-right-radius: 6px;
+                border-bottom-right-radius: 6px;
+            }
+
+            QComboBox::down-arrow {
+                image: url('assets/down_arrow.png');
+                width: 10px;
+                height: 10px;
+                margin: 0px;
+                padding: 0px;
+                alignment: center;
+            }
+        """)
+
+        self.combo_box.currentIndexChanged.connect(self.handle_selection)
+
+        layout.addWidget(title)
+        layout.addWidget(self.combo_box)
+
+        header_widget = QWidget()
+        header_widget.setLayout(layout)
+
+        self.layout.addWidget(header_widget)
 
     def create_overview_finance(self):
         grid_layout = QGridLayout()
         grid_layout.setSpacing(10)  # Khoảng cách giữa các ô
 
+        user_id = self.main_window.user_info['user_id']
+
+        # Lấy ngày hiện tại và ngày đầu tháng
+        today = QDate.currentDate()
+        start_of_month = QDate(today.year(), today.month(), 1).toString("yyyy-MM-dd")
+        start_of_last_month = QDate(today.year(), today.month() - 1, 1).toString("yyyy-MM-dd")
+        end_of_last_month = QDate(today.year(), today.month() - 1, today.addMonths(-1).daysInMonth()).toString(
+            "yyyy-MM-dd")
+
+        # Tổng thu nhập tháng này
+        total_income_this_month = self.main_window.db_manager.transaction_manager.get_total_income(user_id, start_of_month, today.toString("yyyy-MM-dd"))
+        # Tổng thu nhập tháng trước
+        total_income_last_month = self.main_window.db_manager.transaction_manager.get_total_income(user_id, start_of_last_month, end_of_last_month)
+        income_note = f"{(total_income_this_month - total_income_last_month) / total_income_last_month * 100:.2f}% so với tháng trước" if total_income_last_month else "N/A"
+
+        # Tổng chi tiêu tháng này
+        total_expense_this_month = self.main_window.db_manager.transaction_manager.get_total_expense(user_id, start_of_month, today.toString("yyyy-MM-dd"))
+        # Tổng chi tiêu tháng trước
+        total_expense_last_month = self.main_window.db_manager.transaction_manager.get_total_expense(user_id, start_of_last_month, end_of_last_month)
+        expense_note = f"{(total_expense_this_month - total_expense_last_month) / total_expense_last_month * 100:.2f}% so với tháng trước" if total_expense_last_month else "N/A"
+
+        # Tính toán tiết kiệm (chênh lệch giữa thu nhập và chi tiêu tháng này so với tháng trước)
+        savings_this_month = total_income_this_month - total_expense_this_month
+        savings_last_month = total_income_last_month - total_expense_last_month
+        savings_note = f"{(savings_this_month - savings_last_month) / savings_last_month * 100:.2f}% so với tháng trước" if savings_last_month else "N/A"
+
+        # Số dư hiện tại
+        current_balance = self.main_window.db_manager.transaction_manager.get_total_balance(user_id)
+
+        # Tạo dữ liệu hiển thị
         data = [
             {
-                "label": "Thu nhập tháng này",
-                "value": 15000000,
-                "note": "+20% so với tháng trước"
+                "label": "Tổng thu nhập",
+                "value": total_income_this_month,
+                "note": income_note
             },
             {
-                "label": "Chi phí tháng này",
-                "value": 5000000,
-                "note": "-10% so với tháng trước"
+                "label": "Tổng chi tiêu",
+                "value": total_expense_this_month,
+                "note": expense_note
             },
             {
-                "label": "Số khách hàng mới",
-                "value": 120,
-                "note": "+15% so với tháng trước"
+                "label": "Tiết kiệm",
+                "value": savings_this_month,
+                "note": savings_note
             },
             {
-                "label": "Sản phẩm bán ra",
-                "value": 300,
-                "note": "+5% so với tháng trước"
-            },
+                "label": "Số dư hiện tại",
+                "value": current_balance,
+                "note": ""
+            }
         ]
 
         # Duyệt qua dữ liệu và thêm vào lưới
@@ -151,8 +240,10 @@ class DashboardScreen(QWidget):
 
     def generate_transaction_statistics(self):
         """Tạo thống kê giao dịch và vẽ biểu đồ."""
-        user_id = self.main_window.user_info['user_id']  # Lấy user_id từ thông tin người dùng
-        transactions = self.main_window.db_manager.transaction_manager.get_transactions_from_start_of_october(user_id)
+        user_id = self.main_window.user_info['user_id']
+        start_date_str = self.start_date.toString("yyyy-MM-dd")
+        end_date_str = self.end_date.toString("yyyy-MM-dd")
+        transactions = self.main_window.db_manager.transaction_manager.get_transactions_by_date_range(user_id, start_date_str, end_date_str)
 
         # Tính tổng số tiền theo loại giao dịch
         transaction_stats = defaultdict(float)
@@ -169,17 +260,17 @@ class DashboardScreen(QWidget):
         self.ax.clear()
 
         # Vẽ biểu đồ
-        self.ax.bar(labels, values, color=['#3498db', '#e74c3c', '#2ecc71'])  # Màu cho từng loại giao dịch
-        self.ax.set_title('Tổng Quan Giao Dịch Từ Đầu Tháng 10')
+        self.ax.bar(labels, values, color=['#3498db', '#e74c3c', '#2ecc71'])
+        self.ax.set_title('Tổng Quan Giao Dịch')
         self.ax.set_xlabel('Loại Giao Dịch')
         self.ax.set_ylabel('Tổng Số Tiền (VND)')
 
         # Thiết lập ticks và labels
-        self.ax.set_xticks(range(len(labels)))  # Đặt ticks cho từng label
-        self.ax.set_xticklabels(labels, rotation=45, ha='right')  # Căn chỉnh nhãn cho dễ đọc
+        self.ax.set_xticks(range(len(labels)))
+        self.ax.set_xticklabels(labels, rotation=45, ha='right')
 
         self.figure.tight_layout()
-        self.canvas.draw()  # Vẽ lại canvas
+        self.canvas.draw()
 
     def create_category_statistics_widget(self):
         """Tạo widget để hiển thị thống kê danh mục giao dịch."""
@@ -188,12 +279,14 @@ class DashboardScreen(QWidget):
 
     def generate_category_statistics(self):
         """Tạo thống kê danh mục và vẽ biểu đồ pie."""
-        user_id = self.main_window.user_info['user_id']  # Lấy user_id từ thông tin người dùng
-        category_stats = self.main_window.db_manager.transaction_manager.get_category_statistics_from_start_of_october(user_id)
+        user_id = self.main_window.user_info['user_id']
+        start_date_str = self.start_date.toString("yyyy-MM-dd")
+        end_date_str = self.end_date.toString("yyyy-MM-dd")
+        category_stats = self.main_window.db_manager.transaction_manager.get_category_statistics_by_date_range(user_id, start_date_str, end_date_str)
 
         # Tạo dữ liệu cho biểu đồ
-        labels = [category[0] for category in category_stats]  # Tên danh mục
-        values = [category[1] for category in category_stats]  # Tổng số tiền theo danh mục
+        labels = [category[0] for category in category_stats]
+        values = [category[1] for category in category_stats]
 
         # Xóa biểu đồ cũ
         self.ax_cat.clear()
@@ -203,4 +296,35 @@ class DashboardScreen(QWidget):
         self.ax_cat.axis('equal')  # Đảm bảo hình tròn
 
         self.figure_cat.tight_layout()
-        self.canvas_cat.draw()  # Vẽ lại canvas
+        self.canvas_cat.draw()
+
+    def handle_selection(self, index):
+        current_text = self.combo_box.currentText()
+
+        today = QDate.currentDate()
+
+        if current_text == "Hôm nay":
+            self.start_date = today
+            self.end_date = today
+        elif current_text == "Tuần này":
+            self.start_date = today.addDays(-(today.dayOfWeek() - 1))  # Thứ 2
+            self.end_date = self.start_date.addDays(6)  # Chủ Nhật
+        elif current_text == "Tháng này":
+            self.start_date = QDate(today.year(), today.month(), 1)
+            self.end_date = QDate(today.year(), today.month(), today.daysInMonth())
+        elif current_text == "Quý này":
+            current_month = today.month()
+            if current_month <= 3:
+                start_month = 1
+            elif current_month <= 6:
+                start_month = 4
+            elif current_month <= 9:
+                start_month = 7
+            else:
+                start_month = 10
+            self.start_date = QDate(today.year(), start_month, 1)
+            self.end_date = QDate(today.year(), start_month + 2, QDate(today.year(), start_month + 2, 1).daysInMonth())
+
+        # Gọi hàm để cập nhật dữ liệu dựa trên khoảng thời gian
+        self.generate_transaction_statistics()
+        self.generate_category_statistics()

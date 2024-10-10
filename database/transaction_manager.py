@@ -25,21 +25,47 @@ class TransactionManager:
         """, (user_id,))
         return self.cursor.fetchall()
 
-    def get_transactions_from_start_of_october(self, user_id):
+    def get_transactions_by_date_range(self, user_id, start_date, end_date):
+        """Lấy giao dịch từ khoảng thời gian nhất định."""
         self.cursor.execute("""
         SELECT * FROM transactions 
-        WHERE user_id = ? AND created_at >= '2024-10-01' 
-        ORDER BY created_at DESC;
-        """, (user_id,))
+        WHERE user_id = ? AND date BETWEEN ? AND ?
+        ORDER BY date DESC;
+        """, (user_id, start_date, end_date))
         return self.cursor.fetchall()
 
-    def get_category_statistics_from_start_of_october(self, user_id):
+    def get_category_statistics_by_date_range(self, user_id, start_date, end_date):
+        """Lấy thống kê danh mục giao dịch từ khoảng thời gian nhất định."""
         self.cursor.execute("""
         SELECT categories.category_name, SUM(transactions.amount) as total_amount
         FROM transactions 
         JOIN categories ON transactions.category_id = categories.category_id
-        WHERE transactions.user_id = ? AND transactions.created_at >= '2024-10-01'
+        WHERE transactions.user_id = ? AND transactions.date BETWEEN ? AND ?
         GROUP BY categories.category_name
         ORDER BY total_amount DESC;
-        """, (user_id,))
+        """, (user_id, start_date, end_date))
         return self.cursor.fetchall()
+
+    def get_total_income(self, user_id, start_date, end_date):
+        """Lấy tổng thu nhập trong khoảng thời gian."""
+        self.cursor.execute("""
+        SELECT SUM(amount) FROM transactions 
+        WHERE user_id = ? AND transaction_type = 'Thu nhập' AND date BETWEEN ? AND ?
+        """, (user_id, start_date, end_date))
+        return self.cursor.fetchone()[0] or 0  # Nếu không có dữ liệu, trả về 0
+
+    def get_total_expense(self, user_id, start_date, end_date):
+        """Lấy tổng chi tiêu trong khoảng thời gian."""
+        self.cursor.execute("""
+        SELECT SUM(amount) FROM transactions 
+        WHERE user_id = ? AND transaction_type = 'Chi tiêu' AND date BETWEEN ? AND ?
+        """, (user_id, start_date, end_date))
+        return self.cursor.fetchone()[0] or 0
+
+    def get_total_balance(self, user_id):
+        """Lấy tổng số dư hiện tại từ tất cả các tài khoản."""
+        self.cursor.execute("""
+        SELECT SUM(balance) FROM accounts 
+        WHERE user_id = ?
+        """, (user_id,))
+        return self.cursor.fetchone()[0] or 0

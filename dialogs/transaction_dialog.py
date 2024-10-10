@@ -33,7 +33,7 @@ class TransactionDialog(BaseDialog):
 
         # Loại giao dịch dropdown
         self.type_combo = QComboBox()
-        self.type_combo.addItems(["Chi tiêu", "Thu nhập", "Vay nợ"])
+        self.type_combo.addItems(["Thu nhập", "Chi tiêu"])
         self.type_combo.currentTextChanged.connect(self.update_category_options)
         self.add_content(self.create_row("Loại giao dịch:", self.type_combo))
 
@@ -57,10 +57,9 @@ class TransactionDialog(BaseDialog):
         self.add_content(self.create_row("Tài khoản:", self.account_combo))
 
     def populate_accounts(self):
-        """Lấy danh sách tài khoản từ cơ sở dữ liệu và thêm vào dropdown."""
         self.account_combo.clear()
         user_id = self.parent.user_info['user_id']  # Lấy user_id từ thông tin người dùng
-        limit = 100  # Giới hạn số tài khoản lấy về
+        limit = 10  # Giới hạn số tài khoản lấy về
         offset = 0  # Thay đổi offset nếu cần thiết để phân trang
 
         accounts = self.db_manager.account_manager.get_accounts_for_user(user_id, limit, offset)  # Gọi phương thức với đủ tham số
@@ -68,9 +67,8 @@ class TransactionDialog(BaseDialog):
             self.account_combo.addItem(account['account_name'], account['account_id'])
 
     def populate_categories(self):
-        """Lấy danh sách các danh mục từ cơ sở dữ liệu và thêm vào dropdown."""
         self.category_combo.clear()
-        self.categories = self.db_manager.category_manager.get_categories()  # Gọi phương thức để lấy danh mục từ DB
+        self.categories = self.db_manager.category_manager.get_categories()
         for category in self.categories:
             self.category_combo.addItem(category['category_name'], category['category_id'])
 
@@ -84,7 +82,6 @@ class TransactionDialog(BaseDialog):
             self.category_combo.addItem(category['category_name'], category['category_id'])
 
     def get_transaction_data(self):
-        """Trả về dữ liệu giao dịch dưới dạng dictionary."""
         return {
             "amount": self.amount_input.text(),
             "type": self.type_combo.currentText(),

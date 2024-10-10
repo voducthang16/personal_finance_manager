@@ -65,7 +65,6 @@ class BaseDialog(QDialog):
                 padding: 0px;
                 alignment: center;
             }
-
         """)
 
         # Tạo layout chính
