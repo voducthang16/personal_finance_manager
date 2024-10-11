@@ -231,7 +231,7 @@ class MainWindow(QMainWindow):
             self.right_layout.insertWidget(0, self.top_info_widget)
 
     def open_add_transaction_dialog(self):
-        dialog = TransactionDialog(self, db_manager=self.db_manager)
+        dialog = TransactionDialog(self)
         dialog.exec_()
 
     def open_add_account_dialog(self):

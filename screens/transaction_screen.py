@@ -70,7 +70,7 @@ class TransactionScreen(QWidget):
         transactions_formatted = self.format_transaction_data(transactions_paginated)
 
         headers = ["Tài Khoản", "Danh Mục", "Số Tiền", "Loại Giao Dịch", "Ngày", "Mô Tả"]
-        column_widths = [100, 150, 100, 100, 150, 150]
+        column_widths = [100, 150, 100, 80, 100, 180]
 
         self.table_widget.set_data(headers, transactions_formatted, column_widths)
 

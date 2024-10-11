@@ -6,16 +6,15 @@ from dialogs.base_dialog import BaseDialog
 
 
 class TransactionDialog(BaseDialog):
-    def __init__(self, parent=None, transaction_data=None, db_manager=None):
+    def __init__(self, main_window=None, transaction_data=None):
         super().__init__(
-            parent,
+            main_window,
             title="Thêm/Chỉnh Sửa Giao dịch",
             width=600,
             height=600
         )
         self.transaction_data = transaction_data
-        self.parent = parent
-        self.db_manager = db_manager
+        self.main_window = main_window
         self.accounts = []  # Placeholder for account data
         self.categories = []  # Placeholder for categories
         self.setup_transaction_fields()
@@ -58,17 +57,17 @@ class TransactionDialog(BaseDialog):
 
     def populate_accounts(self):
         self.account_combo.clear()
-        user_id = self.parent.user_info['user_id']  # Lấy user_id từ thông tin người dùng
-        limit = 10  # Giới hạn số tài khoản lấy về
-        offset = 0  # Thay đổi offset nếu cần thiết để phân trang
+        user_id = self.main_window.user_info['user_id']
+        limit = 10
+        offset = 0
 
-        accounts = self.db_manager.account_manager.get_accounts_for_user(user_id, limit, offset)  # Gọi phương thức với đủ tham số
+        accounts = self.main_window.db_manager.account_manager.get_accounts_for_user(user_id, limit, offset)  # Gọi phương thức với đủ tham số
         for account in accounts:
             self.account_combo.addItem(account['account_name'], account['account_id'])
 
     def populate_categories(self):
         self.category_combo.clear()
-        self.categories = self.db_manager.category_manager.get_categories()
+        self.categories = self.main_window.db_manager.category_manager.get_categories()
         for category in self.categories:
             self.category_combo.addItem(category['category_name'], category['category_id'])
 
@@ -111,7 +110,7 @@ class TransactionDialog(BaseDialog):
             return
 
         if self.transaction_data:
-            self.db_manager.update_transaction(
+            self.main_window.db_manager.update_transaction(
                 self.transaction_data['transaction_id'],
                 amount,
                 transaction_type,
@@ -120,8 +119,8 @@ class TransactionDialog(BaseDialog):
                 account
             )
         else:
-            user_id = self.parent.user_info['user_id']
-            self.db_manager.transaction_manager.add_transaction(
+            user_id = self.main_window.user_info['user_id']
+            self.main_window.db_manager.transaction_manager.add_transaction(
                 user_id=user_id,
                 account_id=self.account_combo.currentData(),  # Lấy account_id từ dropdown
                 category_id=self.category_combo.currentData(),  # Lấy category_id từ dropdown

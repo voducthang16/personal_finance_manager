@@ -7,34 +7,138 @@ class TransactionManager:
 
     def add_transaction(self, user_id, account_id, category_id, amount, transaction_type, description, date):
         try:
+            # Bắt đầu transaction để đảm bảo tính toàn vẹn dữ liệu
+            self.cursor.connection.execute("BEGIN TRANSACTION")
+
+            # Thêm giao dịch vào bảng transactions
             self.cursor.execute("""
             INSERT INTO transactions (user_id, account_id, category_id, amount, transaction_type, description, date, created_at, updated_at, is_deleted)
             VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
             """, (user_id, account_id, category_id, amount, transaction_type, description, date))
+
+            # Cập nhật số dư trong tài khoản
+            if transaction_type == "Thu nhập":
+                self.cursor.execute("""
+                UPDATE accounts
+                SET balance = balance + ?
+                WHERE account_id = ? AND user_id = ?
+                """, (amount, account_id, user_id))
+            elif transaction_type == "Chi tiêu":
+                self.cursor.execute("""
+                UPDATE accounts
+                SET balance = balance - ?
+                WHERE account_id = ? AND user_id = ?
+                """, (amount, account_id, user_id))
+
+            # Commit transaction nếu không có lỗi xảy ra
             self.cursor.connection.commit()
+
         except sqlite3.Error as e:
+            # Rollback nếu có lỗi
+            self.cursor.connection.rollback()
             print(f"Lỗi khi thêm giao dịch: {e}")
 
     def update_transaction(self, transaction_id, amount, transaction_type, description, date):
         try:
+            # Bắt đầu transaction
+            self.cursor.connection.execute("BEGIN TRANSACTION")
+
             self.cursor.execute("""
+            SELECT account_id, amount, transaction_type FROM transactions
+            WHERE transaction_id = ? AND is_deleted = 0
+            """, (transaction_id,))
+            old_transaction = self.cursor.fetchone()
+
+            if old_transaction:
+                old_account_id, old_amount, old_transaction_type = old_transaction
+
+                # Hoàn tác thay đổi số dư của giao dịch cũ
+                if old_transaction_type == "Thu nhập":
+                    self.cursor.execute("""
+                    UPDATE accounts
+                    SET balance = balance - ?
+                    WHERE account_id = ?
+                    """, (old_amount, old_account_id))
+                elif old_transaction_type == "Chi tiêu":
+                    self.cursor.execute("""
+                    UPDATE accounts
+                    SET balance = balance + ?
+                    WHERE account_id = ?
+                    """, (old_amount, old_account_id))
+
+                # Cập nhật giao dịch mới
+                self.cursor.execute("""
                 UPDATE transactions
                 SET amount = ?, transaction_type = ?, description = ?, date = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE transaction_id = ? AND is_deleted = 0
-            """, (amount, transaction_type, description, date, transaction_id))
-            self.cursor.connection.commit()
+                """, (amount, transaction_type, description, date, transaction_id))
+
+                # Cập nhật lại số dư cho giao dịch mới
+                if transaction_type == "Thu nhập":
+                    self.cursor.execute("""
+                    UPDATE accounts
+                    SET balance = balance + ?
+                    WHERE account_id = ?
+                    """, (amount, old_account_id))
+                elif transaction_type == "Chi tiêu":
+                    self.cursor.execute("""
+                    UPDATE accounts
+                    SET balance = balance - ?
+                    WHERE account_id = ?
+                    """, (amount, old_account_id))
+
+                # Commit thay đổi
+                self.cursor.connection.commit()
+            else:
+                print("Giao dịch không tồn tại hoặc đã bị xóa.")
+
         except sqlite3.Error as e:
+            self.cursor.connection.rollback()
             print(f"Lỗi khi cập nhật giao dịch: {e}")
 
     def delete_transaction(self, transaction_id):
         try:
+            # Bắt đầu transaction
+            self.cursor.connection.execute("BEGIN TRANSACTION")
+
+            # Lấy thông tin giao dịch trước khi xóa
             self.cursor.execute("""
+            SELECT account_id, amount, transaction_type FROM transactions
+            WHERE transaction_id = ? AND is_deleted = 0
+            """, (transaction_id,))
+            transaction = self.cursor.fetchone()
+
+            if transaction:
+                account_id, amount, transaction_type = transaction
+
+                # Hoàn tác số dư dựa trên loại giao dịch
+                if transaction_type == "Thu nhập":
+                    self.cursor.execute("""
+                    UPDATE accounts
+                    SET balance = balance - ?
+                    WHERE account_id = ?
+                    """, (amount, account_id))
+                elif transaction_type == "Chi tiêu":
+                    self.cursor.execute("""
+                    UPDATE accounts
+                    SET balance = balance + ?
+                    WHERE account_id = ?
+                    """, (amount, account_id))
+
+                # Đánh dấu giao dịch là đã xóa
+                self.cursor.execute("""
                 UPDATE transactions
                 SET is_deleted = 1, updated_at = CURRENT_TIMESTAMP
                 WHERE transaction_id = ?
-            """, (transaction_id,))
-            self.cursor.connection.commit()
+                """, (transaction_id,))
+
+                # Commit transaction
+                self.cursor.connection.commit()
+            else:
+                print("Giao dịch không tồn tại hoặc đã bị xóa.")
+
         except sqlite3.Error as e:
+            self.cursor.connection.rollback()
             print(f"Lỗi khi xóa giao dịch: {e}")
 
     def get_all_transactions(self, user_id, limit=None, offset=None):
