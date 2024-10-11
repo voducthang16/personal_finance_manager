@@ -247,9 +247,10 @@ class DashboardScreen(QWidget):
 
         # Tính tổng số tiền theo loại giao dịch
         transaction_stats = defaultdict(float)
+        print(transactions)
         for transaction in transactions:
-            amount = transaction[4]  # amount
-            transaction_type = transaction[5]  # transaction_type
+            amount = transaction['amount']  # amount
+            transaction_type = transaction['transaction_type']  # transaction_type
             transaction_stats[transaction_type] += amount
 
         # Tạo dữ liệu cho biểu đồ

@@ -74,11 +74,9 @@ class AccountScreen(QWidget):
         self.update_pagination()
 
     def update_pagination(self):
-        """Cập nhật thông tin phân trang cho TableWidget."""
-        current_page_display = self.current_page + 1  # Trang bắt đầu từ 1 thay vì 0
+        current_page_display = self.current_page + 1
         total_pages = self.total_pages
 
-        # Gọi hàm update_pagination của TableWidget và truyền thông tin phân trang
         self.table_widget.update_pagination(current_page_display, total_pages)
 
     def format_accounts_data(self, accounts_raw):

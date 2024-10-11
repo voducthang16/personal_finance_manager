@@ -33,7 +33,7 @@ class TransactionDialog(BaseDialog):
 
         # Loại giao dịch dropdown
         self.type_combo = QComboBox()
-        self.type_combo.addItems(["Thu nhập", "Chi tiêu"])
+        self.type_combo.addItems(["Chi tiêu", "Thu nhập"])
         self.type_combo.currentTextChanged.connect(self.update_category_options)
         self.add_content(self.create_row("Loại giao dịch:", self.type_combo))
 
@@ -121,7 +121,7 @@ class TransactionDialog(BaseDialog):
             )
         else:
             user_id = self.parent.user_info['user_id']
-            self.db_manager.add_transaction(
+            self.db_manager.transaction_manager.add_transaction(
                 user_id=user_id,
                 account_id=self.account_combo.currentData(),  # Lấy account_id từ dropdown
                 category_id=self.category_combo.currentData(),  # Lấy category_id từ dropdown
