@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableView, QLabel, QHeaderView, QHBoxLayout
 from PyQt5.QtWidgets import QPushButton
 
-from models.generic_table_model import GenericTableModel
+from models import GenericTableModel
 from widgets.action_widget import ActionWidget
 
 class TableWidget(QWidget):

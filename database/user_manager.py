@@ -1,5 +1,7 @@
 import sqlite3
 
+from utils import tuples_to_dicts
+
 
 class UserManager:
     def __init__(self, cursor):
@@ -20,7 +22,7 @@ class UserManager:
         try:
             self.cursor.execute("""
             UPDATE users 
-            SET name = ?, email = ?
+            SET name = ?, email = ?, updated_at = CURRENT_TIMESTAMP
             WHERE user_id = ?
             """, (name, email, user_id))
             self.cursor.connection.commit()
@@ -32,10 +34,7 @@ class UserManager:
         self.cursor.execute("SELECT * FROM users ORDER BY user_id ASC LIMIT 1")
         row = self.cursor.fetchone()
         if row:
-            return {
-                'user_id': row[0],
-                'name': row[1],
-                'email': row[2],
-                'created_at': row[3]
-            }
+            columns = [description[0] for description in self.cursor.description]
+            user_dict = tuples_to_dicts([row], columns)[0]  # Vì chỉ có 1 kết quả nên lấy phần tử đầu tiên
+            return user_dict
         return None

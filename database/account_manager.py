@@ -1,5 +1,4 @@
 import sqlite3
-
 from utils import tuples_to_dicts
 
 
@@ -10,8 +9,8 @@ class AccountManager:
     def add_account(self, user_id, account_name, balance=0):
         try:
             self.cursor.execute("""
-            INSERT INTO accounts (user_id, account_name, balance)
-            VALUES (?, ?, ?)
+            INSERT INTO accounts (user_id, account_name, balance, created_at, updated_at, is_deleted)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
             """, (user_id, account_name, balance))
             self.cursor.connection.commit()
         except sqlite3.Error as e:
@@ -21,17 +20,18 @@ class AccountManager:
         try:
             self.cursor.execute("""
                 UPDATE accounts
-                SET account_name = ?, balance = ?
-                WHERE account_id = ?
+                SET account_name = ?, balance = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE account_id = ? AND is_deleted = 0
             """, (account_name, balance, account_id))
             self.cursor.connection.commit()
         except sqlite3.Error as e:
-            print(f"Error updating account: {e}")
+            print(f"Lỗi khi cập nhật tài khoản: {e}")
 
     def delete_account(self, account_id):
         try:
             self.cursor.execute("""
-                DELETE FROM accounts 
+                UPDATE accounts
+                SET is_deleted = 1, updated_at = CURRENT_TIMESTAMP
                 WHERE account_id = ?
             """, (account_id,))
             self.cursor.connection.commit()
@@ -40,9 +40,10 @@ class AccountManager:
             raise e
 
     def get_accounts_for_user(self, user_id, limit, offset):
-        """Lấy danh sách tài khoản của người dùng"""
         self.cursor.execute("""
-        SELECT * FROM accounts WHERE user_id = ? LIMIT ? OFFSET ?
+        SELECT * FROM accounts 
+        WHERE user_id = ? AND is_deleted = 0
+        LIMIT ? OFFSET ?
         """, (user_id, limit, offset))
 
         columns = [column[0] for column in self.cursor.description]
@@ -53,6 +54,7 @@ class AccountManager:
 
     def count_accounts_for_user(self, user_id):
         self.cursor.execute("""
-        SELECT COUNT(*) FROM accounts WHERE user_id = ?
+        SELECT COUNT(*) FROM accounts 
+        WHERE user_id = ? AND is_deleted = 0
         """, (user_id,))
         return self.cursor.fetchone()[0]

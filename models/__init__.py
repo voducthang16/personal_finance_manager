@@ -1,0 +1,1 @@
+from models.generic_table_model import GenericTableModel
