@@ -21,7 +21,7 @@ class GenericTableModel(QAbstractTableModel):
 
     def columnCount(self, parent=None):
         # Thêm một cột cho Action (Edit/Delete)
-        return len(self.headers) + 1  # +1 vì thêm cột "Action"
+        return len(self.headers) + 1
 
     def data(self, index, role=Qt.DisplayRole):
         if not index.isValid():
@@ -48,7 +48,6 @@ class GenericTableModel(QAbstractTableModel):
         return QVariant()
 
     def update_data(self, data):
-        """Cập nhật tất cả dữ liệu và reset phân trang."""
         self.beginResetModel()
         self._all_data = data
         self.current_page = 0
@@ -56,7 +55,6 @@ class GenericTableModel(QAbstractTableModel):
         self.endResetModel()
 
     def next_page(self):
-        """Chuyển đến trang kế tiếp."""
         if (self.current_page + 1) * self.page_size < len(self._all_data):
             self.beginResetModel()
             self.current_page += 1
@@ -64,7 +62,6 @@ class GenericTableModel(QAbstractTableModel):
             self.endResetModel()
 
     def previous_page(self):
-        """Chuyển đến trang trước."""
         if self.current_page > 0:
             self.beginResetModel()
             self.current_page -= 1
@@ -72,5 +69,4 @@ class GenericTableModel(QAbstractTableModel):
             self.endResetModel()
 
     def total_pages(self):
-        """Tính tổng số trang."""
         return (len(self._all_data) + self.page_size - 1) // self.page_size

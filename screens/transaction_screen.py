@@ -89,13 +89,12 @@ class TransactionScreen(QWidget):
             category_name = transaction['category_name']
             amount = transaction['amount']
             transaction_type = transaction['transaction_type']
-            raw_date = transaction['date']
+            raw_date = transaction['created_at']
             description = transaction['description']
 
             # Định dạng số tiền
             amount_formatted = f"{amount:,.0f} VND"
-            # Định dạng ngày từ chuỗi ban đầu
-            formatted_date = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y")  # Format ngày DD/MM/YYYY
+            formatted_date = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y")
 
             # Thêm vào danh sách dữ liệu đã được định dạng
             formatted_data.append({

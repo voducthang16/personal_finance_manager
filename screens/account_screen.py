@@ -1,16 +1,18 @@
-from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QDialog
 
-from dialogs.account_dialog import AccountDialog
-from widgets.table_widget import TableWidget
+from dialogs import ConfirmDialog, AccountDialog
+from widgets import TableWidget, MessageBoxWidget
+
 
 class AccountScreen(QWidget):
     def __init__(self, main_window):
         super().__init__(main_window)
         self.main_window = main_window
+        self.message_box = MessageBoxWidget(self)
         self.setContentsMargins(10, 0, 10, 0)
-        self.page_size = 3  # Số lượng bản ghi trên mỗi trang
-        self.current_page = 0  # Bắt đầu từ trang 0
-        self.total_pages = 1  # Tổng số trang ban đầu (sẽ tính sau)
+        self.page_size = 3
+        self.current_page = 0
+        self.total_pages = 1
 
         # Main layout
         self.layout = QVBoxLayout(self)
@@ -21,11 +23,10 @@ class AccountScreen(QWidget):
 
         self.column_mapping = {
             0: 'account_name',
-            1: 'balance',
+            1: 'balance_formated',
             2: 'created_at',
         }
 
-        # Table widget to display account information
         self.table_widget = TableWidget(
             main_window=self.main_window,
             current_screen=self,
@@ -37,7 +38,6 @@ class AccountScreen(QWidget):
         self.layout.addWidget(self.table_widget)
 
     def initialize(self):
-        """Tính tổng số trang trước và sau đó tải dữ liệu tài khoản."""
         self.load_total_pages()
         self.load_accounts()
 
@@ -54,13 +54,11 @@ class AccountScreen(QWidget):
         self.layout.addWidget(title)
 
     def load_total_pages(self):
-        """Tính tổng số trang dựa trên tổng số tài khoản và kích thước trang."""
         user_id = self.main_window.user_info['user_id']
         total_accounts = self.main_window.db_manager.account_manager.count_accounts_for_user(user_id)
         self.total_pages = (total_accounts + self.page_size - 1) // self.page_size
 
     def load_accounts(self):
-        """Load account data and populate the table."""
         user_id = self.main_window.user_info['user_id']
         offset = self.current_page * self.page_size
         accounts_raw = self.main_window.db_manager.account_manager.get_accounts_for_user(user_id, self.page_size, offset)
@@ -82,19 +80,18 @@ class AccountScreen(QWidget):
     def format_accounts_data(self, accounts_raw):
         formatted_data = []
         for account in accounts_raw:
-            # Truy cập các trường từ dictionary account
             account_id = account['account_id']
             account_name = account['account_name']
             balance = account['balance']
 
             # Định dạng số dư
-            balance_formatted = f"{balance:,.0f} VND"  # Ví dụ: 1,000,000 VND
+            balance_formatted = f"{balance:,.0f} VND"
 
-            # Thêm vào danh sách dữ liệu đã được định dạng
             formatted_data.append({
-                'account_id': account_id,  # Bạn có thể loại bỏ dòng này nếu không muốn hiển thị account_id
+                'account_id': account_id,
                 'account_name': account_name,
-                'balance': balance_formatted,
+                'balance': balance,
+                'balance_formated': balance_formatted,
                 'created_at': account['created_at'].split()[0]
             })
         return formatted_data
@@ -116,4 +113,16 @@ class AccountScreen(QWidget):
 
     def confirm_delete_account(self, row):
         account_data = self.table_widget.model._all_data[row]
+        account_name = account_data['account_name']
+        account_id = account_data['account_id']
 
+        dialog = ConfirmDialog(title="Xác nhận xóa", message=f"Bạn có chắc chắn muốn xóa tài khoản '{account_name}'?", parent=self)
+        result = dialog.exec_()
+
+        if result == QDialog.Accepted:
+            try:
+                self.main_window.db_manager.account_manager.delete_account(account_id)
+                self.load_accounts()
+                self.message_box.show_success_message("Tài khoản đã được xóa thành công.")
+            except Exception as e:
+                self.message_box.show_error_message(f"Đã xảy ra lỗi khi xóa tài khoản: {e}")

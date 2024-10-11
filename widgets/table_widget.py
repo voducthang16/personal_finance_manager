@@ -140,14 +140,8 @@ class TableWidget(QWidget):
                         self.table_view.setColumnWidth(i, width)  # Fixed width
 
     def update_pagination(self, current_page, total_pages):
-        """Cập nhật thông tin phân trang dựa trên dữ liệu từ AccountScreen."""
         self.page_label.setText(f"Trang {current_page} / {total_pages}")
 
         # Cập nhật trạng thái của nút phân trang
         self.prev_button.setEnabled(current_page > 1)
         self.next_button.setEnabled(current_page < total_pages)
-
-    def handle_action(self, callback, row):
-        """Xử lý hành động với callback động"""
-        if callback:
-            callback(row)  # Gọi hàm callback với row hiện tại

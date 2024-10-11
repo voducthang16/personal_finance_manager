@@ -5,7 +5,6 @@ class ActionWidget(QWidget):
     def __init__(self, parent=None, edit_callback=None, delete_callback=None, row=None):
         super().__init__(parent)
 
-        # Create buttons
         self.edit_button = QPushButton("Edit")
         self.delete_button = QPushButton("Delete")
 
@@ -43,7 +42,7 @@ class ActionWidget(QWidget):
         layout = QHBoxLayout(self)
         layout.addWidget(self.edit_button)
         layout.addWidget(self.delete_button)
-        layout.setContentsMargins(0, 0, 0, 0)  # Optional: Adjust margins to your preference
+        layout.setContentsMargins(5, 0, 5, 0)
         layout.setSpacing(5)
 
         # Set the layout for this widget
