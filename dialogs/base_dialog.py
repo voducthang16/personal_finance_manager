@@ -1,22 +1,23 @@
 from PyQt5.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QWidget, QMessageBox
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QWidget
 )
 from PyQt5.QtCore import Qt
+
+from widgets import MessageBoxWidget
 
 
 class BaseDialog(QDialog):
     def __init__(self, parent=None, title="Tiêu đề", width=400, height=300):
         super().__init__(parent)
+        self.message_box = MessageBoxWidget(self)
         self.title = title
         self.width = width
         self.height = height
         self.setup_ui()
 
     def setup_ui(self):
-        # Thiết lập kích thước cửa sổ
         self.setFixedSize(self.width, self.height)
 
-        # Áp dụng stylesheet cho QDialog và các thành phần khác, loại bỏ các styles chung cho QPushButton
         self.setStyleSheet("""
             QDialog {
                 background-color: #121212;
@@ -176,49 +177,6 @@ class BaseDialog(QDialog):
         row_layout.setStretch(1, 3)
         row_widget.setLayout(row_layout)
         return row_widget
-
-    def show_message_box(self, title, message, icon_type):
-        msg_box = QMessageBox(self)
-        msg_box.setWindowTitle(title)
-        msg_box.setText(message)
-        msg_box.setIcon(icon_type)
-        background_color = ""
-        hover_color = ""
-
-        if icon_type == QMessageBox.Information:
-            background_color = '#28a745'
-            hover_color = '#218838'
-        elif icon_type == QMessageBox.Warning:
-            background_color = '#ffc107'
-            hover_color = '#e0a800'
-        elif icon_type == QMessageBox.Critical:
-            background_color = '#dc3545'
-            hover_color = '#c82333'
-
-        style = f"""
-            QPushButton {{
-                background-color: {background_color};
-                color: white;
-                border: none;
-                padding: 4px 0px;
-                border-radius: 6px;
-                min-width: 80px;
-            }}
-            QPushButton:hover {{
-                background-color: {hover_color};
-            }}
-        """
-        msg_box.setStyleSheet(style)
-        msg_box.exec_()
-
-    def show_success_message(self, message):
-        self.show_message_box("Thành công", message, QMessageBox.Information)
-
-    def show_error_message(self, message):
-        self.show_message_box("Lỗi", message, QMessageBox.Critical)
-
-    def show_warning_message(self, message):
-        self.show_message_box("Cảnh báo", message, QMessageBox.Warning)
 
     def add_content(self, widget):
         self.content_layout.addWidget(widget)

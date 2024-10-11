@@ -101,13 +101,13 @@ class TransactionDialog(BaseDialog):
         account = data["account"]
 
         if not amount or not transaction_type or not category or not account:
-            self.show_error_message("Vui lòng nhập đầy đủ thông tin")
+            self.message_box.show_error_message("Vui lòng nhập đầy đủ thông tin")
             return
 
         try:
             self.amount = float(amount)
         except ValueError:
-            self.show_error_message("Số tiền phải là một số hợp lệ")
+            self.message_box.show_error_message("Số tiền phải là một số hợp lệ")
             return
 
         if self.transaction_data:

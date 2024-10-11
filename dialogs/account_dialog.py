@@ -37,7 +37,6 @@ class AccountDialog(BaseDialog):
         }
 
     def submit(self):
-        """Xử lý khi người dùng nhấn nút Lưu."""
         data = self.get_account_data()
         account_name = data["account_name"]
         balance = data["balance"]
@@ -49,29 +48,22 @@ class AccountDialog(BaseDialog):
         try:
             balance_float = float(balance.replace(",", "").replace(" VND", ""))
         except ValueError:
-            self.show_error_message("Số dư phải là một số hợp lệ.")
+            self.message_box.show_error_message("Số dư phải là một số hợp lệ.")
             return
 
-        # Cập nhật tài khoản nếu có account_id
         if self.account_id:
             self.main_window.db_manager.account_manager.update_account(self.account_id, account_name, balance_float)
-            self.show_success_message("Cập nhật tài khoản thành công.")
+            self.message_box.show_success_message("Cập nhật tài khoản thành công.")
         else:
-            # Thêm tài khoản mới
             user_id = self.main_window.user_info['user_id']
             self.main_window.db_manager.account_manager.add_account(user_id, account_name, balance_float)
-            self.show_success_message("Thêm tài khoản thành công.")
+            self.message_box.show_success_message("Thêm tài khoản thành công.")
 
-        # Chuyển đến màn hình tài khoản và đóng dialog
         self.main_window.display_screen("Tài Khoản")
         self.accept()
 
     def populate_data(self):
-        """Điền dữ liệu vào các trường trong dialog khi chỉnh sửa tài khoản."""
-        account_name = self.account_data['account_name']  # Tên tài khoản là phần tử đầu tiên
-        balance = self.account_data['balance']  # Số dư là phần tử thứ hai
-        # Remove commas and ' VND' to make it compatible with float conversion
-        balance_clean = balance.replace(",", "").replace(" VND", "")
-
+        account_name = self.account_data['account_name']
+        balance = self.account_data['balance']
         self.account_name_input.setText(account_name)
-        self.balance_input.setText(balance_clean)  # Hiển thị số dư dạng số
+        self.balance_input.setText(str(balance))
