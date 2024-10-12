@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QLineEdit, QComboBox, QDateEdit
+from PyQt5.QtWidgets import QLineEdit, QComboBox, QDateEdit, QCalendarWidget
 from PyQt5.QtCore import QDate
 from PyQt5.QtGui import QDoubleValidator
 

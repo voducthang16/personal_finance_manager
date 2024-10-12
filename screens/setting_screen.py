@@ -5,12 +5,14 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 import sqlite3
 
+from widgets import MessageBoxWidget
 
 
 class SettingScreen(QWidget):
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
+        self.message_box = MessageBoxWidget(self)
         self.is_edit_mode = False
         self.init_ui()
 
@@ -118,7 +120,7 @@ class SettingScreen(QWidget):
         if self.is_edit_mode:
             try:
                 self.main_window.db_manager.user_manager.update_user(self.main_window.user_info['user_id'], name, email)
-                self.main_window.user_info = self.main_window.db_manager.get_first_user()
+                self.main_window.user_info = self.main_window.db_manager.user_manager.get_first_user()
                 # QToast("Thông tin đã được cập nhật thành công!", toast_type=QToast.SUCCESS)
             except sqlite3.Error as e:
                 print(e)
@@ -127,10 +129,10 @@ class SettingScreen(QWidget):
             try:
                 self.main_window.db_manager.add_user(name, email)
                 self.main_window.user_info = self.main_window.db_manager.get_first_user()
-                # QToast("Thông tin đã được cập nhật thành công!", toast_type=QToast.SUCCESS)
+                self.message_box.show_success_message("Cập nhật thành công.")
             except sqlite3.Error as e:
                 print(e)
-                # QToast(f"Lỗi khi thêm người dùng: {e}", toast_type=QToast.ERROR)
+                self.message_box.show_error_message(f"Đã xảy ra lỗi khi cập nhật: {e}")
 
     def clear_fields(self):
         self.name_input.clear()
