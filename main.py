@@ -59,20 +59,16 @@ class MainWindow(QMainWindow):
             self.show_main_screen()
 
     def initialize_database(self):
-        """Hàm kiểm tra và tạo file .db nếu chưa tồn tại."""
         db_file = 'personal_finance.db'
         if not os.path.exists(db_file):
-            # Nếu file không tồn tại, tiến hành tạo cơ sở dữ liệu mới
             print(f"Tạo cơ sở dữ liệu mới: {db_file}")
             self.db_manager = FinanceManager(db_name=db_file)
             self.db_manager.create_tables()
         else:
-            # Nếu cơ sở dữ liệu đã tồn tại, khởi tạo db_manager
             print(f"Cơ sở dữ liệu đã tồn tại: {db_file}")
             self.db_manager = FinanceManager(db_name=db_file)
 
     def show_setup_screen(self):
-        """Hiển thị màn hình thêm người dùng nếu chưa có người dùng"""
         main_widget = QWidget(self)
 
         main_widget.setStyleSheet("""
@@ -101,8 +97,6 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(main_widget)
 
     def show_main_screen(self):
-        """Hiển thị màn hình chính với menu và stacked_widget khi đã có người dùng"""
-        # Tạo widget chính và layout chính
         main_widget = QWidget()
         main_layout = QHBoxLayout(main_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -132,17 +126,17 @@ class MainWindow(QMainWindow):
         self.account_screen = AccountScreen(main_window=self)
 
         self.scrollable_dashboard = ScrollableWidget(self.dashboard_screen)
-        self.scrollable_transaction = ScrollableWidget(self.transaction_screen)
+        # self.scrollable_transaction = ScrollableWidget(self.transaction_screen)
 
         self.stacked_widget.addWidget(self.scrollable_dashboard)
-        self.stacked_widget.addWidget(self.scrollable_transaction)
+        self.stacked_widget.addWidget(self.transaction_screen)
         self.stacked_widget.addWidget(self.setting_screen)
         self.stacked_widget.addWidget(self.account_screen)
 
         # Lưu trữ các màn hình trong từ điển
         self.screens = {
             SCREEN_NAMES["DASHBOARD"]: self.scrollable_dashboard,
-            SCREEN_NAMES["TRANSACTION"]: self.scrollable_transaction,
+            SCREEN_NAMES["TRANSACTION"]: self.transaction_screen,
             SCREEN_NAMES["ACCOUNT"]: self.account_screen,
             SCREEN_NAMES["SETTING"]: self.setting_screen,
         }

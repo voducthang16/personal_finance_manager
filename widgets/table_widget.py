@@ -19,56 +19,53 @@ class TableWidget(QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(5)
 
-        # QTableView
         self.table_view = QTableView()
         self.model = GenericTableModel(page_size=self.page_size, column_mapping=self.column_mapping)
         self.table_view.setModel(self.model)
         self.table_view.setSelectionBehavior(QTableView.SelectRows)
         self.table_view.setAlternatingRowColors(True)
 
-        # Custom style for QTableView
         self.table_view.setStyleSheet("""
             QTableView {
-                background-color: #1d1f21;  /* Nền màu đen nhạt */
-                color: #c5c8c6;  /* Màu chữ xám nhạt */
-                gridline-color: #282a2e;  /* Màu đường kẻ */
-                border: 1px solid #373b41;  /* Đường viền màu xám đậm */
-                font-size: 14px;  /* Kích thước chữ */
+                background-color: #1d1f21;
+                color: #c5c8c6;
+                gridline-color: #282a2e;
+                border: 1px solid #373b41;
+                font-size: 14px;
             }
             QHeaderView::section {
-                background-color: #282a2e;  /* Nền tiêu đề */
-                color: #ffffff;  /* Màu chữ tiêu đề */
-                padding: 4px;  /* Khoảng cách trong tiêu đề */
-                border: none;  /* Bỏ viền */
-                font-weight: bold;  /* Chữ đậm cho tiêu đề */
+                background-color: #282a2e;
+                color: #ffffff;
+                padding: 4px;
+                border: none;
+                font-weight: bold;
             }
-            /* Tùy chỉnh border-radius cho mục đầu tiên và cuối cùng */
             QHeaderView::section:first {
-                border-top-left-radius: 10px;  /* Bo góc trái trên cùng */
+                border-top-left-radius: 10px;
             }
             QHeaderView::section:last {
-                border-top-right-radius: 10px;  /* Bo góc phải trên cùng */
+                border-top-right-radius: 10px;
             }
             QTableView::item {
-                padding: 0px;  /* Reset padding for items */
-                margin: 0px;   /* Reset margin for items */
+                padding: 0px;
+                margin: 0px;
                 background-color: #1d1f21;
             }
             QTableView::item:selected {
-                background-color: #373b41;  /* Màu nền khi được chọn */
-                color: #ffffff;  /* Màu chữ khi được chọn */
+                background-color: #373b41;
+                color: #ffffff;
             }
             QScrollBar:vertical {
-                background-color: #282a2e;  /* Nền thanh cuộn */
-                width: 12px;  /* Độ rộng thanh cuộn */
+                background-color: #282a2e;
+                width: 12px;
             }
             QScrollBar::handle:vertical {
-                background-color: #373b41;  /* Màu thanh kéo */
-                min-height: 20px;  /* Chiều cao tối thiểu */
+                background-color: #373b41;
+                min-height: 20px;
                 border-radius: 6px;
             }
             QScrollBar::handle:vertical:hover {
-                background-color: #4e5358;  /* Màu thanh kéo khi hover */
+                background-color: #4e5358;
             }
         """)
 
@@ -82,11 +79,9 @@ class TableWidget(QWidget):
         self.next_button = QPushButton("Trang Tiếp")
         self.page_label = QLabel("Trang 1 / 1")
 
-        # Kết nối sự kiện nút
         self.prev_button.clicked.connect(self.current_screen.previous_page)
         self.next_button.clicked.connect(self.current_screen.next_page)
 
-        # Thiết lập styles cho nút
         button_style = """
             QPushButton {
                 background-color: #3498db;
@@ -105,7 +100,6 @@ class TableWidget(QWidget):
         self.prev_button.setStyleSheet(button_style)
         self.next_button.setStyleSheet(button_style)
 
-        # Thêm các widget vào layout phân trang
         self.pagination_layout.addWidget(self.prev_button)
         self.pagination_layout.addStretch()
         self.pagination_layout.addWidget(self.page_label)
@@ -115,7 +109,6 @@ class TableWidget(QWidget):
         self.layout.addLayout(self.pagination_layout)
 
     def set_data(self, headers, data, column_widths=None):
-        """Thiết lập dữ liệu cho bảng."""
         self.model.headers = headers
         self.model.update_data(data)
 
@@ -142,6 +135,5 @@ class TableWidget(QWidget):
     def update_pagination(self, current_page, total_pages):
         self.page_label.setText(f"Trang {current_page} / {total_pages}")
 
-        # Cập nhật trạng thái của nút phân trang
         self.prev_button.setEnabled(current_page > 1)
         self.next_button.setEnabled(current_page < total_pages)

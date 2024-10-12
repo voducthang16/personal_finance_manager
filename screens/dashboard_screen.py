@@ -14,12 +14,10 @@ class DashboardScreen(QWidget):
 
         self.create_header()
         self.create_overview_finance()
-        self.create_chart_widget()  # Tạo widget chứa hai biểu đồ
+        self.create_chart_widget()
 
-        # Đẩy các widget lên trên
         self.layout.addStretch()
 
-        # Set default dates to today
         today = QDate.currentDate()
         self.start_date = today
         self.end_date = today
@@ -29,7 +27,6 @@ class DashboardScreen(QWidget):
         self.generate_category_statistics()
 
     def create_header(self):
-        # Tạo layout ngang
         layout = QHBoxLayout()
 
         title = QLabel()
@@ -39,7 +36,6 @@ class DashboardScreen(QWidget):
             font-size: 24px;
         """)
 
-        # Tạo combo_box và kết nối signal
         self.combo_box = QComboBox()
         self.combo_box.setContentsMargins(0, 0, 0, 0)
         self.combo_box.addItems(["Hôm nay", "Tuần này", "Tháng này", "Quý này"])
@@ -95,16 +91,14 @@ class DashboardScreen(QWidget):
 
     def create_overview_finance(self):
         grid_layout = QGridLayout()
-        grid_layout.setSpacing(10)  # Khoảng cách giữa các ô
+        grid_layout.setSpacing(10)
 
         user_id = self.main_window.user_info['user_id']
 
-        # Lấy ngày hiện tại và ngày đầu tháng
         today = QDate.currentDate()
         start_of_month = QDate(today.year(), today.month(), 1).toString("yyyy-MM-dd")
         start_of_last_month = QDate(today.year(), today.month() - 1, 1).toString("yyyy-MM-dd")
-        end_of_last_month = QDate(today.year(), today.month() - 1, today.addMonths(-1).daysInMonth()).toString(
-            "yyyy-MM-dd")
+        end_of_last_month = QDate(today.year(), today.month() - 1, today.addMonths(-1).daysInMonth()).toString("yyyy-MM-dd")
 
         # Tổng thu nhập tháng này
         total_income_this_month = self.main_window.db_manager.transaction_manager.get_total_income(user_id, start_of_month, today.toString("yyyy-MM-dd"))
@@ -150,21 +144,17 @@ class DashboardScreen(QWidget):
             }
         ]
 
-        # Duyệt qua dữ liệu và thêm vào lưới
         for index, item in enumerate(data):
-            col = index % 4  # Cột hiện tại (0 đến 3)
-            row = index // 4  # Hàng hiện tại
+            col = index % 4
+            row = index // 4
 
-            # Tạo widget cho mỗi mục
             widget = self.create_item_widget(item)
 
-            # Thêm widget vào lưới
             grid_layout.addWidget(widget, row, col)
 
         self.layout.addLayout(grid_layout)
 
     def create_item_widget(self, item):
-        # Tạo khung chứa nội dung
         frame = QFrame()
         frame.setFrameShape(QFrame.StyledPanel)
         frame.setStyleSheet("""
@@ -192,26 +182,21 @@ class DashboardScreen(QWidget):
             }
         """)
 
-        # Tạo layout cho khung
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        # Tạo label cho "label"
         label = QLabel(item["label"])
         label.setAlignment(Qt.AlignLeft)
 
-        # Tạo label cho "value"
         value_text = "{:,.0f} đ".format(item["value"])
         value = QLabel(value_text)
         value.setAlignment(Qt.AlignLeft)
         value.setProperty("class", "value")
 
-        # Tạo label cho "note"
         note = QLabel(item["note"])
         note.setAlignment(Qt.AlignLeft)
         note.setProperty("class", "note")
 
-        # Thêm các label vào layout
         layout.addWidget(label)
         layout.addWidget(value)
         layout.addWidget(note)

@@ -98,10 +98,8 @@ class TransactionManager:
 
     def delete_transaction(self, transaction_id):
         try:
-            # Bắt đầu transaction
             self.cursor.connection.execute("BEGIN TRANSACTION")
 
-            # Lấy thông tin giao dịch trước khi xóa
             self.cursor.execute("""
             SELECT account_id, amount, transaction_type FROM transactions
             WHERE transaction_id = ? AND is_deleted = 0

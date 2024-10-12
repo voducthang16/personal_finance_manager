@@ -1,5 +1,7 @@
 from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtGui import QDoubleValidator
+
+from constants import SCREEN_NAMES
 from dialogs.base_dialog import BaseDialog
 
 
@@ -17,13 +19,11 @@ class AccountDialog(BaseDialog):
             self.populate_data()
 
     def setup_account_fields(self):
-        # Tên tài khoản
         self.account_name_input = QLineEdit()
         self.account_name_input.setFixedHeight(40)
         self.account_name_input.setPlaceholderText("Nhập tên tài khoản")
         self.add_content(self.create_row("Tên tài khoản:", self.account_name_input))
 
-        # Số dư
         self.balance_input = QLineEdit()
         self.balance_input.setFixedHeight(40)
         self.balance_input.setPlaceholderText("Nhập số dư")
@@ -59,11 +59,9 @@ class AccountDialog(BaseDialog):
             self.main_window.db_manager.account_manager.add_account(user_id, account_name, balance_float)
             self.message_box.show_success_message("Thêm tài khoản thành công.")
 
-        self.main_window.display_screen("Tài Khoản")
+        self.main_window.display_screen(SCREEN_NAMES["ACCOUNT"])
         self.accept()
 
     def populate_data(self):
-        account_name = self.account_data['account_name']
-        balance = self.account_data['balance']
-        self.account_name_input.setText(account_name)
-        self.balance_input.setText(str(balance))
+        self.account_name_input.setText(self.account_data.get("account_name", ""))
+        self.balance_input.setText(str(self.account_data.get("balance", "")))
