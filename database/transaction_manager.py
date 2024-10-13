@@ -146,6 +146,7 @@ class TransactionManager:
         JOIN accounts ON transactions.account_id = accounts.account_id
         JOIN categories ON transactions.category_id = categories.category_id
         WHERE transactions.user_id = ? AND transactions.is_deleted = 0
+        ORDER BY transactions.date DESC
         """
 
         params = [user_id]
