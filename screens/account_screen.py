@@ -24,7 +24,7 @@ class AccountScreen(QWidget):
         self.column_mapping = {
             0: 'account_name',
             1: 'balance_formated',
-            2: 'created_at',
+            2: 'updated_at',
         }
 
         self.table_widget = TableWidget(
@@ -92,7 +92,7 @@ class AccountScreen(QWidget):
                 'account_name': account_name,
                 'balance': balance,
                 'balance_formated': balance_formatted,
-                'created_at': account['created_at'].split()[0]
+                'updated_at': account['updated_at'].split()[0]
             })
         return formatted_data
 

@@ -39,10 +39,12 @@ class CategoryManager:
             print(f"Lỗi khi xóa danh mục: {e}")
             raise e
 
-    def get_categories(self):
+    def get_categories(self, limit, offset):
         self.cursor.execute("""
-        SELECT * FROM categories WHERE is_deleted = 0
-        """)
+        SELECT * FROM categories 
+        WHERE is_deleted = 0
+        LIMIT ? OFFSET ?
+        """, (limit, offset))
 
         columns = [column[0] for column in self.cursor.description]
         categories_tuples = self.cursor.fetchall()

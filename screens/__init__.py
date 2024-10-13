@@ -1,4 +1,5 @@
 from screens.dashboard_screen import DashboardScreen
+from screens.category_screen import CategoryScreen
 from screens.account_screen import AccountScreen
 from screens.setting_screen import SettingScreen
 from screens.transaction_screen import TransactionScreen

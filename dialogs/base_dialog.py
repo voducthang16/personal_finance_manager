@@ -13,6 +13,7 @@ class BaseDialog(QDialog):
         self.title = title
         self.width = width
         self.height = height
+        self.setWindowTitle("Personal Finance Manager")
         self.setup_ui()
 
     def setup_ui(self):
@@ -236,6 +237,7 @@ class BaseDialog(QDialog):
                 border: none;
                 border-radius: 6px;
                 min-width: 100px;
+                font-size: 16px;
             }
             QPushButton#CancelButton:hover {
                 background-color: #c0392b;
@@ -253,6 +255,7 @@ class BaseDialog(QDialog):
                 border: none;
                 border-radius: 6px;
                 min-width: 100px;
+                font-size: 16px;
             }
             QPushButton#SubmitButton:hover {
                 background-color: #3498db;

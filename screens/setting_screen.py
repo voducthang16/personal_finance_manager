@@ -20,9 +20,11 @@ class SettingScreen(QWidget):
         self.bind_user_info(self.main_window.user_info)
 
     def init_ui(self):
-        # Tạo các label và line edit
         self.name_label = QLabel('Tên:')
-        self.name_label.setStyleSheet("color: white;")
+        self.name_label.setStyleSheet("""
+            color: white;
+            font-size: 16px;
+        """)
 
         self.name_input = QLineEdit()
         self.name_input.setFixedHeight(40)
@@ -32,11 +34,15 @@ class SettingScreen(QWidget):
                 color: white;
                 padding-left: 10px;
                 border-radius: 8px;
+                font-size: 16px;
             }
         """)
 
         self.email_label = QLabel('Email:')
-        self.email_label.setStyleSheet("color: white;")
+        self.email_label.setStyleSheet("""
+            color: white;
+            font-size: 16px;
+        """)
 
         self.email_input = QLineEdit()
         self.email_input.setFixedHeight(40)
@@ -46,6 +52,7 @@ class SettingScreen(QWidget):
                 color: white;
                 padding-left: 10px;
                 border-radius: 8px;
+                font-size: 16px;
             }
         """)
 
@@ -59,6 +66,7 @@ class SettingScreen(QWidget):
                 color: white;
                 border: none;
                 border-radius: 8px;
+                font-size: 16px;
             }
             QPushButton:hover {
                 background-color: #7777FF;

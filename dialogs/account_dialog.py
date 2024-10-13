@@ -1,7 +1,6 @@
 from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtGui import QDoubleValidator
 
-from constants import SCREEN_NAMES
 from dialogs.base_dialog import BaseDialog
 
 
@@ -59,7 +58,7 @@ class AccountDialog(BaseDialog):
             self.main_window.db_manager.account_manager.add_account(user_id, account_name, balance_float)
             self.message_box.show_success_message("Thêm tài khoản thành công.")
 
-        self.main_window.display_screen(SCREEN_NAMES["ACCOUNT"])
+        self.main_window.refresh_current_screen()
         self.accept()
 
     def populate_data(self):

@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import QLineEdit, QComboBox, QDateEdit
 from PyQt5.QtCore import QDate
 from PyQt5.QtGui import QDoubleValidator
 
-from constants import SCREEN_NAMES
 from dialogs.base_dialog import BaseDialog
 
 
@@ -29,7 +28,6 @@ class TransactionDialog(BaseDialog):
         self.amount_input.setValidator(QDoubleValidator(0.99, 9999999.99, 2))
         self.add_content(self.create_row("Số tiền:", self.amount_input))
 
-        # Loại giao dịch dropdown
         self.type_combo = QComboBox()
         self.type_combo.addItems(["Chi tiêu", "Thu nhập"])
         self.type_combo.currentTextChanged.connect(self.update_category_options)
@@ -56,13 +54,15 @@ class TransactionDialog(BaseDialog):
         limit = 10
         offset = 0
 
-        accounts = self.main_window.db_manager.account_manager.get_accounts_for_user(user_id, limit, offset)  # Gọi phương thức với đủ tham số
+        accounts = self.main_window.db_manager.account_manager.get_accounts_for_user(user_id, limit, offset)
         for account in accounts:
             self.account_combo.addItem(account['account_name'], account['account_id'])
 
     def populate_categories(self):
         self.category_combo.clear()
-        self.categories = self.main_window.db_manager.category_manager.get_categories()
+        limit = 10
+        offset = 0
+        self.categories = self.main_window.db_manager.category_manager.get_categories(limit, offset)
         for category in self.categories:
             self.category_combo.addItem(category['category_name'], category['category_id'])
 
@@ -125,7 +125,7 @@ class TransactionDialog(BaseDialog):
             )
             self.message_box.show_success_message("Thêm giao dịch thành công.")
 
-        self.main_window.display_screen(SCREEN_NAMES['TRANSACTION'])
+        self.main_window.refresh_current_screen()
         self.accept()
 
     def populate_data(self):

@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, QVBoxLayout, QStackedWidget, QLabel, QPushButton
 )
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 
 from constants import SCREEN_NAMES
 from database import FinanceManager
@@ -12,7 +13,7 @@ from layouts import SetupLayout
 from widgets import ScrollableWidget
 from layouts.left_menu import LeftMenuWidget
 from dialogs import AccountDialog, TransactionDialog
-from screens import DashboardScreen, AccountScreen, SettingScreen, TransactionScreen
+from screens import DashboardScreen, AccountScreen, SettingScreen, TransactionScreen, CategoryScreen
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -121,6 +122,7 @@ class MainWindow(QMainWindow):
 
         # init screens
         self.dashboard_screen = DashboardScreen(main_window=self)
+        self.category_screen = CategoryScreen(main_window=self)
         self.transaction_screen = TransactionScreen(main_window=self)
         self.setting_screen = SettingScreen(main_window=self)
         self.account_screen = AccountScreen(main_window=self)
@@ -129,6 +131,7 @@ class MainWindow(QMainWindow):
         # self.scrollable_transaction = ScrollableWidget(self.transaction_screen)
 
         self.stacked_widget.addWidget(self.scrollable_dashboard)
+        self.stacked_widget.addWidget(self.category_screen)
         self.stacked_widget.addWidget(self.transaction_screen)
         self.stacked_widget.addWidget(self.setting_screen)
         self.stacked_widget.addWidget(self.account_screen)
@@ -136,6 +139,7 @@ class MainWindow(QMainWindow):
         # Lưu trữ các màn hình trong từ điển
         self.screens = {
             SCREEN_NAMES["DASHBOARD"]: self.scrollable_dashboard,
+            SCREEN_NAMES["CATEGORY"]: self.category_screen,
             SCREEN_NAMES["TRANSACTION"]: self.transaction_screen,
             SCREEN_NAMES["ACCOUNT"]: self.account_screen,
             SCREEN_NAMES["SETTING"]: self.setting_screen,
@@ -181,18 +185,19 @@ class MainWindow(QMainWindow):
 
         # Label ở bên trái
         info_label = QLabel("Thông tin ở trên cùng")
-        info_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        info_label.setAlignment(Qt.AlignVCenter)
         info_label.setStyleSheet("font-size: 16px;")
 
         # Nút ở bên phải
         action_button = QPushButton("Thêm Giao Dịch")
-        action_button.setFixedSize(120, 40)
+        action_button.setFixedSize(160, 40)
         action_button.setStyleSheet("""
             QPushButton {
                 background-color: #3498db;
                 color: white;
                 border: none;
                 border-radius: 6px;
+                font-size: 16px;
             }
             QPushButton:hover {
                 background-color: #2980b9;
@@ -206,13 +211,14 @@ class MainWindow(QMainWindow):
         top_layout.addStretch()  # Đẩy nút về bên phải
         if menu_name == "Tài Khoản":
             add_account = QPushButton("Thêm Tài Khoản")
-            add_account.setFixedSize(150, 40)
+            add_account.setFixedSize(160, 40)
             add_account.setStyleSheet("""
                 QPushButton {
                     background-color: #e67e22;
                     color: white;
                     border: none;
                     border-radius: 6px;
+                    font-size: 16px;
                 }
                 QPushButton:hover {
                     background-color: #d35400;
@@ -250,6 +256,7 @@ class MainWindow(QMainWindow):
 
     def setup_window_property(self):
         self.setWindowTitle("Personal Finance Manager")
+        self.setWindowIcon(QIcon('assets/logo.png'))
 
         # Set minimum size to 80% width and 80% height of the screen
         screen = QDesktopWidget().availableGeometry()

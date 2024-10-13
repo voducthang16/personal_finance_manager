@@ -49,6 +49,7 @@ class LeftMenuWidget(QWidget):
         # Danh sách các mục menu
         self.menu_items = [
             SCREEN_NAMES["DASHBOARD"],
+            SCREEN_NAMES["CATEGORY"],
             SCREEN_NAMES["TRANSACTION"],
             SCREEN_NAMES["ACCOUNT"],
             SCREEN_NAMES["SETTING"],
