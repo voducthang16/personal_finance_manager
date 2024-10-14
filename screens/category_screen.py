@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QDialog
 
 from dialogs import ConfirmDialog, CategoryDialog
 from widgets import TableWidget, MessageBoxWidget
-
+from datetime import datetime
 
 class CategoryScreen(QWidget):
     def __init__(self, main_window):
@@ -60,13 +60,30 @@ class CategoryScreen(QWidget):
     def load_categories(self):
         offset = self.current_page * self.page_size
         categories_raw = self.main_window.db_manager.category_manager.get_categories(self.page_size, offset)
-
+        categories_formated = self.format_categories_data(categories_raw)
         headers = ["Tên Danh Mục", "Loại", "Cập Nhật Lần Cuối"]
         column_widths = [150, 150, 150]
 
-        self.table_widget.set_data(headers, categories_raw, column_widths)
+        self.table_widget.set_data(headers, categories_formated, column_widths)
 
         self.update_pagination()
+
+    def format_categories_data(self, categories_raw):
+        formatted_data = []
+        for category in categories_raw:
+            category_id = category['category_id']
+            category_name = category['category_name']
+            category_type = category['category_type']
+            raw_date = category['updated_at']
+            formatted_date = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y")
+
+            formatted_data.append({
+                'category_id': category_id,
+                'category_name': category_name,
+                'category_type': category_type,
+                'updated_at': formatted_date,
+            })
+        return formatted_data
 
     def update_pagination(self):
         current_page_display = self.current_page + 1

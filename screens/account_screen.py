@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QDialog
 
 from dialogs import ConfirmDialog, AccountDialog
 from widgets import TableWidget, MessageBoxWidget
+from datetime import datetime
 
 
 class AccountScreen(QWidget):
@@ -83,8 +84,9 @@ class AccountScreen(QWidget):
             account_id = account['account_id']
             account_name = account['account_name']
             balance = account['balance']
+            raw_date = account['updated_at']
+            formatted_date = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y")
 
-            # Định dạng số dư
             balance_formatted = f"{balance:,.0f} VND"
 
             formatted_data.append({
@@ -92,7 +94,7 @@ class AccountScreen(QWidget):
                 'account_name': account_name,
                 'balance': balance,
                 'balance_formated': balance_formatted,
-                'updated_at': account['updated_at'].split()[0]
+                'updated_at': formatted_date,
             })
         return formatted_data
 

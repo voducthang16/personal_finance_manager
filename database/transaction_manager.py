@@ -1,5 +1,7 @@
 import sqlite3
 
+from utils import tuples_to_dicts
+
 
 class TransactionManager:
     def __init__(self, cursor):
@@ -150,13 +152,17 @@ class TransactionManager:
         """
 
         params = [user_id]
-        if limit is not None and offset is not None:
-            query += " LIMIT ? OFFSET ?"
-            params.extend([limit, offset])
+        if limit is not None:
+            query += " LIMIT ?"
+            params.append(limit)
+
+        if offset is not None:
+            query += " OFFSET ?"
+            params.append(offset)
 
         self.cursor.execute(query, params)
         results = self.cursor.fetchall()
-        return self.convert_to_dicts(results, self.get_transaction_columns())
+        return tuples_to_dicts(results, self.get_transaction_columns())
 
     def get_transaction_columns(self):
         return ["transaction_id", "user_id", "account_id", "category_id", "amount", "transaction_type",
@@ -180,11 +186,7 @@ class TransactionManager:
 
         self.cursor.execute(query, params)
         results = self.cursor.fetchall()
-        return self.convert_to_dicts(results, self.get_transaction_columns())
-
-    def convert_to_dicts(self, rows, columns):
-        """Chuyển danh sách tuple thành danh sách dictionary dựa trên tên cột."""
-        return [dict(zip(columns, row)) for row in rows]
+        return tuples_to_dicts(results, self.get_transaction_columns())
 
     def get_category_statistics_by_date_range(self, user_id, start_date, end_date):
         """Lấy thống kê danh mục giao dịch từ khoảng thời gian nhất định, chỉ lấy những giao dịch chưa bị xóa."""

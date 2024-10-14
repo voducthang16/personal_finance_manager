@@ -1,9 +1,8 @@
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QFrame, QGridLayout, QWidget, QHBoxLayout, QComboBox
-from PyQt5.QtCore import Qt, QDate
+from PyQt5.QtCore import Qt, QDate, QDateTime
 from matplotlib import pyplot as plt
-from collections import defaultdict
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-
+from datetime import datetime
 
 class DashboardScreen(QWidget):
     def __init__(self, main_window=None):
@@ -14,7 +13,9 @@ class DashboardScreen(QWidget):
 
         self.create_header()
         self.create_overview_finance()
-        self.create_chart_widget()
+
+        # Tạo một hàng chứa recent_transactions_widget và chart
+        self.create_main_row()
 
         self.layout.addStretch()
 
@@ -22,8 +23,10 @@ class DashboardScreen(QWidget):
         self.start_date = today
         self.end_date = today
 
+        self.initialize()
+
     def initialize(self):
-        self.generate_transaction_statistics()
+        # Khởi tạo biểu đồ danh mục
         self.generate_category_statistics()
 
     def create_header(self):
@@ -203,83 +206,188 @@ class DashboardScreen(QWidget):
 
         return frame
 
-    def create_chart_widget(self):
-        """Tạo widget chứa hai biểu đồ."""
-        chart_widget = QWidget()
-        chart_layout = QHBoxLayout(chart_widget)
+    def create_main_row(self):
+        main_row_widget = QWidget()
+        main_row_layout = QHBoxLayout(main_row_widget)
+        main_row_layout.setContentsMargins(0, 10, 0, 0)
 
-        # Biểu đồ thống kê giao dịch
-        self.create_transaction_statistics_widget()
-        chart_layout.addWidget(self.canvas, stretch=6)  # Chiếm 60% chiều rộng
-
-        # Biểu đồ thống kê danh mục
+        self.create_recent_transactions_widget()
         self.create_category_statistics_widget()
-        chart_layout.addWidget(self.canvas_cat, stretch=4)  # Chiếm 40% chiều rộng
 
-        self.layout.addWidget(chart_widget)
+        main_row_layout.addWidget(self.recent_transactions_widget, stretch=1)
+        main_row_layout.addWidget(self.category_statistics_widget, stretch=1)
 
-    def create_transaction_statistics_widget(self):
-        """Tạo widget để hiển thị thống kê giao dịch."""
-        self.figure, self.ax = plt.subplots(figsize=(10, 5))  # Tạo figure
-        self.canvas = FigureCanvas(self.figure)  # Tạo canvas cho figure
+        self.layout.addWidget(main_row_widget)
 
-    def generate_transaction_statistics(self):
-        """Tạo thống kê giao dịch và vẽ biểu đồ."""
+    def create_recent_transactions_widget(self):
+        self.recent_transactions_widget = QWidget()
+        layout = QVBoxLayout(self.recent_transactions_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+
+        title_label = QLabel("Giao dịch gần nhất")
+        title_label.setStyleSheet("""
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        """)
+        layout.addWidget(title_label)
+
         user_id = self.main_window.user_info['user_id']
-        start_date_str = self.start_date.toString("yyyy-MM-dd")
-        end_date_str = self.end_date.toString("yyyy-MM-dd")
-        transactions = self.main_window.db_manager.transaction_manager.get_transactions_by_date_range(user_id, start_date_str, end_date_str)
+        transactions = self.main_window.db_manager.transaction_manager.get_all_transactions(user_id, limit=5)
+        if not transactions:
+            no_data_label = QLabel("Không có giao dịch nào")
+            no_data_label.setStyleSheet("font-size: 14px; color: #888888;")
+            layout.addWidget(no_data_label)
+        else:
+            for transaction in transactions:
+                transaction_widget = QFrame()
+                transaction_layout = QHBoxLayout(transaction_widget)
+                transaction_layout.setSpacing(10)
 
-        # Tính tổng số tiền theo loại giao dịch
-        transaction_stats = defaultdict(float)
-        print(transactions)
-        for transaction in transactions:
-            amount = transaction['amount']  # amount
-            transaction_type = transaction['transaction_type']  # transaction_type
-            transaction_stats[transaction_type] += amount
+                left_layout = QVBoxLayout()
+                category_label = QLabel(transaction['category_name'])
+                category_label.setStyleSheet("font-size: 14px; color: #fff;")
+                raw_date = transaction['date']
+                formatted_date = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y")
+                QDateTime.fromString(transaction['date'], "yyyy-MM-dd HH:mm:ss")
+                date_label = QLabel(formatted_date)
+                date_label.setStyleSheet("font-size: 12px; color: #888888;")
+                left_layout.addWidget(category_label)
+                left_layout.addWidget(date_label)
+                left_layout.addStretch()
 
-        # Tạo dữ liệu cho biểu đồ
-        labels = list(transaction_stats.keys())
-        values = list(transaction_stats.values())
+                amount_label = QLabel(f"{transaction['amount']:,} đ")
+                amount_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+                amount_label.setStyleSheet("""
+                    font-size: 16px;
+                    font-weight: bold;
+                    color: #e74c3c;
+                """)
 
-        # Xóa biểu đồ cũ
-        self.ax.clear()
+                if transaction['transaction_type'] == 'Income':
+                    amount_label.setStyleSheet("""
+                        font-size: 16px;
+                        font-weight: bold;
+                        color: #2ecc71;
+                    """)
 
-        # Vẽ biểu đồ
-        self.ax.bar(labels, values, color=['#3498db', '#e74c3c', '#2ecc71'])
-        self.ax.set_title('Tổng Quan Giao Dịch')
-        self.ax.set_xlabel('Loại Giao Dịch')
-        self.ax.set_ylabel('Tổng Số Tiền (VND)')
+                transaction_layout.addLayout(left_layout)
+                transaction_layout.addWidget(amount_label)
 
-        # Thiết lập ticks và labels
-        self.ax.set_xticks(range(len(labels)))
-        self.ax.set_xticklabels(labels, rotation=45, ha='right')
+                transaction_widget.setLayout(transaction_layout)
 
-        self.figure.tight_layout()
-        self.canvas.draw()
+                transaction_widget.setStyleSheet("""
+                    QFrame {
+                        background-color: #1e1e1e;
+                        border-radius: 8px;
+                    }
+                """)
+
+                layout.addWidget(transaction_widget)
+
+        layout.addStretch()
 
     def create_category_statistics_widget(self):
-        """Tạo widget để hiển thị thống kê danh mục giao dịch."""
-        self.figure_cat, self.ax_cat = plt.subplots(figsize=(10, 5))  # Tạo figure cho thống kê danh mục
-        self.canvas_cat = FigureCanvas(self.figure_cat)  # Tạo canvas cho figure
+        """Tạo widget cho biểu đồ danh mục"""
+        self.category_statistics_widget = QWidget()
+        layout = QVBoxLayout(self.category_statistics_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+
+        # Thêm tiêu đề cho biểu đồ
+        title_label = QLabel("Thống kê danh mục")
+        title_label.setStyleSheet("""
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        """)
+        layout.addWidget(title_label)
+
+        # Tạo figure và canvas cho biểu đồ
+        self.figure_cat, self.ax_cat = plt.subplots(figsize=(5, 5))
+        self.canvas_cat = FigureCanvas(self.figure_cat)
+
+        # Đặt màu nền cho biểu đồ
+        self.figure_cat.patch.set_facecolor('#1e1e1e')  # Màu nền của figure
+        self.ax_cat.set_facecolor('#1e1e1e')  # Màu nền của axes
+
+        # Bọc canvas trong một QFrame để áp dụng border-radius
+        frame = QFrame()
+        frame_layout = QVBoxLayout(frame)
+        frame_layout.setContentsMargins(0, 0, 0, 0)
+        frame_layout.addWidget(self.canvas_cat)
+        frame.setStyleSheet("""
+            QFrame {
+                background-color: #1e1e1e;
+                border-radius: 10px;
+            }
+        """)
+
+        layout.addWidget(frame)
 
     def generate_category_statistics(self):
-        """Tạo thống kê danh mục và vẽ biểu đồ pie."""
+        """Hàm vẽ biểu đồ danh mục"""
         user_id = self.main_window.user_info['user_id']
         start_date_str = self.start_date.toString("yyyy-MM-dd")
         end_date_str = self.end_date.toString("yyyy-MM-dd")
         category_stats = self.main_window.db_manager.transaction_manager.get_category_statistics_by_date_range(user_id, start_date_str, end_date_str)
 
-        # Tạo dữ liệu cho biểu đồ
-        labels = [category[0] for category in category_stats]
-        values = [category[1] for category in category_stats]
-
         # Xóa biểu đồ cũ
         self.ax_cat.clear()
 
-        # Vẽ biểu đồ pie
-        self.ax_cat.pie(values, labels=labels, autopct='%1.1f%%', startangle=90, colors=plt.cm.Paired.colors)
-        self.ax_cat.axis('equal')  # Đảm bảo hình tròn
+        if not category_stats:
+            # Nếu không có dữ liệu, hiển thị thông báo
+            self.ax_cat.text(0.5, 0.5, 'Không có dữ liệu để hiển thị', horizontalalignment='center',
+                             verticalalignment='center', transform=self.ax_cat.transAxes, color='white', fontsize=14)
+            self.ax_cat.set_facecolor('#1e1e1e')  # Màu nền của axes
+            self.ax_cat.axis('off')  # Tắt các trục
+        else:
+            # Tạo dữ liệu cho biểu đồ
+            labels = [category[0] for category in category_stats]
+            values = [category[1] for category in category_stats]
+
+            # Vẽ biểu đồ pie mà không hiển thị labels và percentages trên các phần
+            wedges = self.ax_cat.pie(
+                values,
+                startangle=90,
+                colors=plt.cm.Set3.colors  # Sử dụng bảng màu
+            )[0]
+            self.ax_cat.axis('equal')  # Đảm bảo hình tròn
+
+            # Thêm border màu trắng cho các phần của biểu đồ
+            for wedge in wedges:
+                wedge.set_edgecolor('white')
+
+            # Cập nhật legend với labels màu trắng
+            legend = self.ax_cat.legend(
+                wedges,
+                labels,
+                title="Danh mục",
+                loc="center left",
+                bbox_to_anchor=(1, 0, 0.5, 1),
+                facecolor='#1e1e1e',
+                edgecolor='#1e1e1e',
+                labelcolor='white'
+            )
+            # Đặt màu cho tiêu đề của legend
+            plt.setp(legend.get_title(), color='white')
+
+            # Thêm sự kiện hover để hiển thị phần trăm
+            def on_hover(event):
+                # Kiểm tra nếu con trỏ chuột nằm trong vùng biểu đồ
+                if event.inaxes == self.ax_cat:
+                    for i, wedge in enumerate(wedges):
+                        if wedge.contains_point([event.x, event.y]):
+                            percentage = values[i] / sum(values) * 100
+                            self.ax_cat.set_title(f"{labels[i]}: {percentage:.1f}%", color='white', fontsize=14, y=0.1)
+                            self.canvas_cat.draw()
+                            break
+                    else:
+                        self.ax_cat.set_title('')
+                        self.canvas_cat.draw()
+
+            self.figure_cat.canvas.mpl_connect("motion_notify_event", on_hover)
 
         self.figure_cat.tight_layout()
         self.canvas_cat.draw()
@@ -309,8 +417,9 @@ class DashboardScreen(QWidget):
             else:
                 start_month = 10
             self.start_date = QDate(today.year(), start_month, 1)
-            self.end_date = QDate(today.year(), start_month + 2, QDate(today.year(), start_month + 2, 1).daysInMonth())
+            end_month = start_month + 2
+            end_day = QDate(today.year(), end_month, 1).daysInMonth()
+            self.end_date = QDate(today.year(), end_month, end_day)
 
-        # Gọi hàm để cập nhật dữ liệu dựa trên khoảng thời gian
-        self.generate_transaction_statistics()
+        # Cập nhật biểu đồ danh mục khi thay đổi khoảng thời gian
         self.generate_category_statistics()
