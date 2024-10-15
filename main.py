@@ -11,7 +11,7 @@ from constants import SCREEN_NAMES
 from database import FinanceManager
 from layouts import SetupLayout, LeftMenuWidget
 from widgets import ScrollableWidget
-from dialogs import AccountDialog, TransactionDialog
+from dialogs import AccountDialog, TransactionDialog, CategoryDialog
 from screens import DashboardScreen, AccountScreen, SettingScreen, TransactionScreen, CategoryScreen
 
 class MainWindow(QMainWindow):
@@ -179,27 +179,11 @@ class MainWindow(QMainWindow):
         info_label.setAlignment(Qt.AlignVCenter)
         info_label.setStyleSheet("font-size: 16px;")
 
-        action_button = QPushButton("Thêm Giao Dịch")
-        action_button.setFixedSize(160, 40)
-        action_button.setStyleSheet("""
-            QPushButton {
-                background-color: #3498db;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                font-size: 16px;
-            }
-            QPushButton:hover {
-                background-color: #2980b9;
-            }
-        """)
-
-        action_button.clicked.connect(self.open_add_transaction_dialog)
-
-        # Thêm widget vào top_layout
         top_layout.addWidget(info_label)
         top_layout.addStretch()  # Đẩy nút về bên phải
-        if menu_name == "Tài Khoản":
+
+        # Xử lý thêm nút theo từng menu
+        if menu_name == SCREEN_NAMES["ACCOUNT"]:
             add_account = QPushButton("Thêm Tài Khoản")
             add_account.setFixedSize(160, 40)
             add_account.setStyleSheet("""
@@ -216,9 +200,50 @@ class MainWindow(QMainWindow):
             """)
             add_account.clicked.connect(self.open_add_account_dialog)
             top_layout.addWidget(add_account)
-        top_layout.addWidget(action_button)
+
+        elif menu_name == SCREEN_NAMES["CATEGORY"]:
+            add_category = QPushButton("Thêm Danh Mục")
+            add_category.setFixedSize(160, 40)
+            add_category.setStyleSheet("""
+                QPushButton {
+                    background-color: #8e44ad;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 16px;
+                }
+                QPushButton:hover {
+                    background-color: #71368a;
+                }
+            """)
+            add_category.clicked.connect(self.open_category_dialog)
+            top_layout.addWidget(add_category)
+
+        elif menu_name == SCREEN_NAMES["TRANSACTION"]:
+            add_transaction = QPushButton("Thêm Giao Dịch")
+            add_transaction.setFixedSize(160, 40)
+            add_transaction.setStyleSheet("""
+                QPushButton {
+                    background-color: #3498db;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 16px;
+                }
+                QPushButton:hover {
+                    background-color: #2980b9;
+                }
+            """)
+            add_transaction.clicked.connect(self.open_add_transaction_dialog)
+            top_layout.addWidget(add_transaction)
+
         if self.top_info_widget is not None:
             self.right_layout.insertWidget(0, self.top_info_widget)
+
+    def open_category_dialog(self):
+        """Mở hộp thoại danh mục."""
+        dialog = CategoryDialog(self)
+        dialog.exec_()
 
     def open_add_transaction_dialog(self):
         dialog = TransactionDialog(self)

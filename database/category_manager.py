@@ -43,6 +43,7 @@ class CategoryManager:
         self.cursor.execute("""
         SELECT * FROM categories 
         WHERE is_deleted = 0
+        ORDER BY categories.category_id DESC
         LIMIT ? OFFSET ?
         """, (limit, offset))
 

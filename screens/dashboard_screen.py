@@ -29,6 +29,7 @@ class DashboardScreen(QWidget):
         self.generate_category_statistics()
         self.generate_total_summary_chart()
         self.update_overview_finance()
+        self.update_recent_transactions()
 
     def create_header(self):
         layout = QHBoxLayout()
@@ -290,16 +291,31 @@ class DashboardScreen(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(10)
 
-        title_label = QLabel("Giao dịch gần nhất")
-        title_label.setStyleSheet("""
+        max_transaction_items = 5
+        item_height = 70
+        self.recent_transactions_widget.setFixedHeight(item_height * max_transaction_items)
+
+        self.title_label = QLabel("Giao dịch gần nhất")
+        self.title_label.setStyleSheet("""
             font-size: 18px;
             font-weight: bold;
             color: #fff;
         """)
-        layout.addWidget(title_label)
+        layout.addWidget(self.title_label)
 
+        self.update_recent_transactions()
+
+    def update_recent_transactions(self):
         user_id = self.main_window.user_info['user_id']
         transactions = self.main_window.db_manager.transaction_manager.get_all_transactions(user_id, limit=5)
+
+        layout = self.recent_transactions_widget.layout()
+
+        for i in reversed(range(layout.count())):
+            widget_to_remove = layout.itemAt(i).widget()
+            if widget_to_remove is not None and widget_to_remove != self.title_label:
+                widget_to_remove.deleteLater()
+
         if not transactions:
             no_data_label = QLabel("Không có giao dịch nào")
             no_data_label.setStyleSheet("font-size: 14px; color: #888888;")
@@ -307,18 +323,22 @@ class DashboardScreen(QWidget):
         else:
             for transaction in transactions:
                 transaction_widget = QFrame()
+                transaction_widget.setFixedHeight(56)
                 transaction_layout = QHBoxLayout(transaction_widget)
-                transaction_layout.setSpacing(10)
-
                 left_layout = QVBoxLayout()
                 category_label = QLabel(transaction['category_name'])
-                category_label.setStyleSheet("font-size: 14px; color: #fff;")
-                datetime_obj = QDateTime.fromString(transaction['date'], "yyyy-MM-dd HH:mm:ss")
+                category_label.setStyleSheet("""
+                    font-size: 14px;
+                    color: #fff;
+                """)
+                datetime_obj = QDateTime.fromString(transaction['date'], "yyyy-MM-dd")
                 date_obj = datetime_obj.date()
                 formatted_date = date_obj.toString("dd/MM/yyyy")
-                QDateTime.fromString(transaction['date'], "yyyy-MM-dd HH:mm:ss")
                 date_label = QLabel(formatted_date)
-                date_label.setStyleSheet("font-size: 12px; color: #888888;")
+                date_label.setStyleSheet("""
+                    font-size: 11px;
+                    color: #888888;
+                """)
                 left_layout.addWidget(category_label)
                 left_layout.addWidget(date_label)
                 left_layout.addStretch()
@@ -331,7 +351,7 @@ class DashboardScreen(QWidget):
                     color: #e74c3c;
                 """)
 
-                if transaction['transaction_type'] == 'Income':
+                if transaction['transaction_type'] == 'Thu nhập':
                     amount_label.setStyleSheet("""
                         font-size: 16px;
                         font-weight: bold;
@@ -342,11 +362,12 @@ class DashboardScreen(QWidget):
                 transaction_layout.addWidget(amount_label)
 
                 transaction_widget.setLayout(transaction_layout)
-
                 transaction_widget.setStyleSheet("""
                     QFrame {
                         background-color: #1e1e1e;
                         border-radius: 8px;
+                        padding: 0;
+                        margin: 0;
                     }
                 """)
 
