@@ -4,14 +4,13 @@ from PyQt5.QtWidgets import (
     QMainWindow, QApplication, QDesktopWidget, QWidget,
     QHBoxLayout, QVBoxLayout, QStackedWidget, QLabel, QPushButton
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTime
 from PyQt5.QtGui import QIcon
 
 from constants import SCREEN_NAMES
 from database import FinanceManager
-from layouts import SetupLayout
+from layouts import SetupLayout, LeftMenuWidget
 from widgets import ScrollableWidget
-from layouts.left_menu import LeftMenuWidget
 from dialogs import AccountDialog, TransactionDialog
 from screens import DashboardScreen, AccountScreen, SettingScreen, TransactionScreen, CategoryScreen
 
@@ -113,7 +112,7 @@ class MainWindow(QMainWindow):
 
         # Tạo stacked_widget
         self.stacked_widget = QStackedWidget()
-        self.stacked_widget.setContentsMargins(0, 10, 0, 10)  # left, top, right, bottom
+        self.stacked_widget.setContentsMargins(0, 10, 0, 10)
         self.stacked_widget.setStyleSheet("""
             background-color: #121212;
             border-radius: 10px;
@@ -128,7 +127,6 @@ class MainWindow(QMainWindow):
         self.account_screen = AccountScreen(main_window=self)
 
         self.scrollable_dashboard = ScrollableWidget(self.dashboard_screen)
-        # self.scrollable_transaction = ScrollableWidget(self.transaction_screen)
 
         self.stacked_widget.addWidget(self.scrollable_dashboard)
         self.stacked_widget.addWidget(self.category_screen)
@@ -136,7 +134,6 @@ class MainWindow(QMainWindow):
         self.stacked_widget.addWidget(self.setting_screen)
         self.stacked_widget.addWidget(self.account_screen)
 
-        # Lưu trữ các màn hình trong từ điển
         self.screens = {
             SCREEN_NAMES["DASHBOARD"]: self.scrollable_dashboard,
             SCREEN_NAMES["CATEGORY"]: self.category_screen,
@@ -145,29 +142,22 @@ class MainWindow(QMainWindow):
             SCREEN_NAMES["SETTING"]: self.setting_screen,
         }
 
-        # Thêm top_info_widget và stacked_widget vào right_layout
         self.right_layout.addWidget(self.stacked_widget)
 
-        # Tạo một widget để chứa right_layout
         right_widget = QWidget()
         right_widget.setLayout(self.right_layout)
 
-        # Thêm left_menu và right_widget vào main_layout
         main_layout.addWidget(self.left_menu, 1)
         main_layout.addWidget(right_widget, 3)
 
-        # Kết nối tín hiệu từ menu bên trái
         self.left_menu.menu_clicked.connect(self.display_screen)
 
-        # Đặt main_widget làm central widget
         self.setCentralWidget(main_widget)
 
-        # Hiển thị màn hình mặc định (Trang chủ)
         self.display_screen(SCREEN_NAMES["DASHBOARD"])
 
     def create_top_layout(self, menu_name):
         if self.top_info_widget:
-            # Remove the old widget from the layout if it exists
             self.right_layout.removeWidget(self.top_info_widget)
             self.top_info_widget.deleteLater()
 
@@ -183,12 +173,12 @@ class MainWindow(QMainWindow):
         top_layout = QHBoxLayout(self.top_info_widget)
         top_layout.setContentsMargins(10, 10, 10, 10)
 
-        # Label ở bên trái
-        info_label = QLabel("Thông tin ở trên cùng")
+        greeting_message = self.get_greeting_message()
+
+        info_label = QLabel(greeting_message)
         info_label.setAlignment(Qt.AlignVCenter)
         info_label.setStyleSheet("font-size: 16px;")
 
-        # Nút ở bên phải
         action_button = QPushButton("Thêm Giao Dịch")
         action_button.setFixedSize(160, 40)
         action_button.setStyleSheet("""
@@ -277,6 +267,19 @@ class MainWindow(QMainWindow):
         else:
             self.user_info = user
         return self.user_info
+
+    def get_greeting_message(self):
+        current_time = QTime.currentTime()
+        hour = current_time.hour()
+
+        if 5 <= hour < 12:
+            return "Chào buổi sáng"
+        elif 12 <= hour < 17:
+            return "Chào buổi trưa"
+        elif 17 <= hour < 20:
+            return "Chào buổi chiều"
+        else:
+            return "Chào buổi tối"
 
 def main():
     app = QApplication(sys.argv)

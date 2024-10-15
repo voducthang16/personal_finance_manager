@@ -43,6 +43,7 @@ class AccountManager:
         self.cursor.execute("""
         SELECT * FROM accounts 
         WHERE user_id = ? AND is_deleted = 0
+        ORDER BY accounts.account_id DESC
         LIMIT ? OFFSET ?
         """, (user_id, limit, offset))
 

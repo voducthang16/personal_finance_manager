@@ -148,7 +148,7 @@ class TransactionManager:
         JOIN accounts ON transactions.account_id = accounts.account_id
         JOIN categories ON transactions.category_id = categories.category_id
         WHERE transactions.user_id = ? AND transactions.is_deleted = 0
-        ORDER BY transactions.date DESC
+        ORDER BY transactions.transaction_id DESC
         """
 
         params = [user_id]
@@ -169,7 +169,6 @@ class TransactionManager:
                 "description", "date", "created_at", "updated_at", "is_deleted", "account_name", "category_name"]
 
     def get_transactions_by_date_range(self, user_id, start_date, end_date, limit=None, offset=None):
-        """Lấy giao dịch từ khoảng thời gian nhất định, chỉ lấy những giao dịch chưa bị xóa (is_deleted = 0)."""
         query = """
         SELECT transactions.*, accounts.account_name, categories.category_name 
         FROM transactions 
@@ -189,7 +188,6 @@ class TransactionManager:
         return tuples_to_dicts(results, self.get_transaction_columns())
 
     def get_category_statistics_by_date_range(self, user_id, start_date, end_date):
-        """Lấy thống kê danh mục giao dịch từ khoảng thời gian nhất định, chỉ lấy những giao dịch chưa bị xóa."""
         self.cursor.execute("""
         SELECT categories.category_name, SUM(transactions.amount) as total_amount
         FROM transactions 
@@ -201,7 +199,6 @@ class TransactionManager:
         return self.cursor.fetchall()
 
     def get_total_income(self, user_id, start_date, end_date):
-        """Lấy tổng thu nhập trong khoảng thời gian, chỉ tính giao dịch chưa bị xóa."""
         self.cursor.execute("""
         SELECT SUM(amount) FROM transactions 
         WHERE user_id = ? AND transaction_type = 'Thu nhập' AND date BETWEEN ? AND ? AND is_deleted = 0
@@ -209,7 +206,6 @@ class TransactionManager:
         return self.cursor.fetchone()[0] or 0  # Nếu không có dữ liệu, trả về 0
 
     def get_total_expense(self, user_id, start_date, end_date):
-        """Lấy tổng chi tiêu trong khoảng thời gian, chỉ tính giao dịch chưa bị xóa."""
         self.cursor.execute("""
         SELECT SUM(amount) FROM transactions 
         WHERE user_id = ? AND transaction_type = 'Chi tiêu' AND date BETWEEN ? AND ? AND is_deleted = 0

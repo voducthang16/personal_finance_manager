@@ -1,8 +1,7 @@
-from PyQt5.QtWidgets import QLabel, QVBoxLayout, QFrame, QGridLayout, QWidget, QHBoxLayout, QComboBox
+from PyQt5.QtWidgets import QLabel, QVBoxLayout, QFrame, QWidget, QHBoxLayout, QComboBox, QSizePolicy
 from PyQt5.QtCore import Qt, QDate, QDateTime
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from datetime import datetime
 
 class DashboardScreen(QWidget):
     def __init__(self, main_window=None):
@@ -14,8 +13,8 @@ class DashboardScreen(QWidget):
         self.create_header()
         self.create_overview_finance()
 
-        # Tạo một hàng chứa recent_transactions_widget và chart
         self.create_main_row()
+        self.create_total_summary_chart_widget()
 
         self.layout.addStretch()
 
@@ -23,11 +22,13 @@ class DashboardScreen(QWidget):
         self.start_date = today
         self.end_date = today
 
+        self.hover_connection = None
         self.initialize()
 
     def initialize(self):
-        # Khởi tạo biểu đồ danh mục
         self.generate_category_statistics()
+        self.generate_total_summary_chart()
+        self.update_overview_finance()
 
     def create_header(self):
         layout = QHBoxLayout()
@@ -93,69 +94,46 @@ class DashboardScreen(QWidget):
         self.layout.addWidget(header_widget)
 
     def create_overview_finance(self):
-        grid_layout = QGridLayout()
-        grid_layout.setSpacing(10)
+        h_layout = QHBoxLayout()
+        h_layout.setSpacing(10)
 
-        user_id = self.main_window.user_info['user_id']
-
-        today = QDate.currentDate()
-        start_of_month = QDate(today.year(), today.month(), 1).toString("yyyy-MM-dd")
-        start_of_last_month = QDate(today.year(), today.month() - 1, 1).toString("yyyy-MM-dd")
-        end_of_last_month = QDate(today.year(), today.month() - 1, today.addMonths(-1).daysInMonth()).toString("yyyy-MM-dd")
-
-        # Tổng thu nhập tháng này
-        total_income_this_month = self.main_window.db_manager.transaction_manager.get_total_income(user_id, start_of_month, today.toString("yyyy-MM-dd"))
-        # Tổng thu nhập tháng trước
-        total_income_last_month = self.main_window.db_manager.transaction_manager.get_total_income(user_id, start_of_last_month, end_of_last_month)
-        income_note = f"{(total_income_this_month - total_income_last_month) / total_income_last_month * 100:.2f}% so với tháng trước" if total_income_last_month else "N/A"
-
-        # Tổng chi tiêu tháng này
-        total_expense_this_month = self.main_window.db_manager.transaction_manager.get_total_expense(user_id, start_of_month, today.toString("yyyy-MM-dd"))
-        # Tổng chi tiêu tháng trước
-        total_expense_last_month = self.main_window.db_manager.transaction_manager.get_total_expense(user_id, start_of_last_month, end_of_last_month)
-        expense_note = f"{(total_expense_this_month - total_expense_last_month) / total_expense_last_month * 100:.2f}% so với tháng trước" if total_expense_last_month else "N/A"
-
-        # Tính toán tiết kiệm (chênh lệch giữa thu nhập và chi tiêu tháng này so với tháng trước)
-        savings_this_month = total_income_this_month - total_expense_this_month
-        savings_last_month = total_income_last_month - total_expense_last_month
-        savings_note = f"{(savings_this_month - savings_last_month) / savings_last_month * 100:.2f}% so với tháng trước" if savings_last_month else "N/A"
-
-        # Số dư hiện tại
-        current_balance = self.main_window.db_manager.transaction_manager.get_total_balance(user_id)
-
-        # Tạo dữ liệu hiển thị
         data = [
             {
                 "label": "Tổng thu nhập",
-                "value": total_income_this_month,
-                "note": income_note
+                "value": 0,
+                "note": ""
             },
             {
                 "label": "Tổng chi tiêu",
-                "value": total_expense_this_month,
-                "note": expense_note
+                "value": 0,
+                "note": ""
             },
             {
                 "label": "Tiết kiệm",
-                "value": savings_this_month,
-                "note": savings_note
+                "value": 0,
+                "note": ""
             },
             {
                 "label": "Số dư hiện tại",
-                "value": current_balance,
+                "value": 0,
                 "note": ""
             }
         ]
 
-        for index, item in enumerate(data):
-            col = index % 4
-            row = index // 4
+        self.overview_labels = {}
 
+        for item in data:
             widget = self.create_item_widget(item)
+            label_key = item["label"]
+            for child in widget.findChildren(QLabel):
+                if child.property("class") == "value":
+                    self.overview_labels[label_key + "_value"] = child
+                elif child.property("class") == "note":
+                    self.overview_labels[label_key + "_note"] = child
+            widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+            h_layout.addWidget(widget)
 
-            grid_layout.addWidget(widget, row, col)
-
-        self.layout.addLayout(grid_layout)
+        self.layout.addLayout(h_layout)
 
     def create_item_widget(self, item):
         frame = QFrame()
@@ -206,6 +184,93 @@ class DashboardScreen(QWidget):
 
         return frame
 
+    def update_overview_finance(self):
+        user_id = self.main_window.user_info['user_id']
+        start_date_str = self.start_date.toString("yyyy-MM-dd")
+        end_date_str = self.end_date.toString("yyyy-MM-dd")
+
+        # Xác định loại khoảng thời gian hiện tại
+        current_text = self.combo_box.currentText()
+        if current_text == "Hôm nay":
+            period_type = "hôm"
+        elif current_text == "Tuần này":
+            period_type = "tuần"
+        elif current_text == "Tháng này":
+            period_type = "tháng"
+        elif current_text == "Quý này":
+            period_type = "quý"
+        else:
+            period_type = "khoảng trước"
+
+        # Tổng thu nhập trong khoảng thời gian hiện tại
+        total_income = self.main_window.db_manager.transaction_manager.get_total_income(user_id, start_date_str, end_date_str)
+
+        # Tổng thu nhập trong khoảng thời gian trước đó (để tính % so với trước)
+        # Giả sử khoảng thời gian trước đó có độ dài tương tự
+        delta_days = self.start_date.daysTo(self.end_date) + 1
+        if current_text == "Quý này":
+            # Đối với quý, tính khoảng thời gian trước đó là 3 tháng
+            prev_start_date = self.start_date.addMonths(-3)
+            prev_end_date = self.end_date.addMonths(-3)
+        elif current_text == "Tháng này":
+            prev_start_date = self.start_date.addMonths(-1)
+            prev_end_date = self.end_date.addMonths(-1)
+        elif current_text == "Tuần này":
+            prev_start_date = self.start_date.addDays(-7)
+            prev_end_date = self.end_date.addDays(-7)
+        elif current_text == "Hôm nay":
+            prev_start_date = self.start_date.addDays(-1)
+            prev_end_date = self.end_date.addDays(-1)
+        else:
+            # Mặc định
+            prev_start_date = self.start_date.addDays(-delta_days)
+            prev_end_date = self.end_date.addDays(-1)
+
+        prev_start_str = prev_start_date.toString("yyyy-MM-dd")
+        prev_end_str = prev_end_date.toString("yyyy-MM-dd")
+        total_income_prev = self.main_window.db_manager.transaction_manager.get_total_income(user_id, prev_start_str, prev_end_str)
+        if total_income_prev:
+            income_change = ((total_income - total_income_prev) / total_income_prev) * 100
+            income_note = f"{income_change:.2f}% so với {period_type} trước"
+        else:
+            income_note = "0% so với " + period_type + " trước"
+
+        # Tổng chi tiêu trong khoảng thời gian hiện tại
+        total_expense = self.main_window.db_manager.transaction_manager.get_total_expense(user_id, start_date_str, end_date_str)
+
+        # Tổng chi tiêu trong khoảng thời gian trước đó
+        total_expense_prev = self.main_window.db_manager.transaction_manager.get_total_expense(user_id, prev_start_str, prev_end_str)
+        if total_expense_prev:
+            expense_change = ((total_expense - total_expense_prev) / total_expense_prev) * 100
+            expense_note = f"{expense_change:.2f}% so với {period_type} trước"
+        else:
+            expense_note = "0% so với " + period_type + " trước"
+
+        # Tính toán tiết kiệm
+        savings = total_income - total_expense
+        savings_prev = total_income_prev - total_expense_prev if total_income_prev and total_expense_prev else 0
+        if savings_prev:
+            savings_change = ((savings - savings_prev) / savings_prev) * 100
+            savings_note = f"{savings_change:.2f}% so với {period_type} trước"
+        else:
+            savings_note = "0% so với " + period_type + " trước"
+
+        # Số dư hiện tại (có thể không thay đổi dựa trên khoảng thời gian, nhưng nếu cần, có thể tính lại)
+        current_balance = self.main_window.db_manager.transaction_manager.get_total_balance(user_id)
+
+        # Cập nhật các QLabel
+        self.overview_labels["Tổng thu nhập_value"].setText("{:,.0f} đ".format(total_income))
+        self.overview_labels["Tổng thu nhập_note"].setText(income_note)
+
+        self.overview_labels["Tổng chi tiêu_value"].setText("{:,.0f} đ".format(total_expense))
+        self.overview_labels["Tổng chi tiêu_note"].setText(expense_note)
+
+        self.overview_labels["Tiết kiệm_value"].setText("{:,.0f} đ".format(savings))
+        self.overview_labels["Tiết kiệm_note"].setText(savings_note)
+
+        self.overview_labels["Số dư hiện tại_value"].setText("{:,.0f} đ".format(current_balance))
+        self.overview_labels["Số dư hiện tại_note"].setText("")
+
     def create_main_row(self):
         main_row_widget = QWidget()
         main_row_layout = QHBoxLayout(main_row_widget)
@@ -248,8 +313,9 @@ class DashboardScreen(QWidget):
                 left_layout = QVBoxLayout()
                 category_label = QLabel(transaction['category_name'])
                 category_label.setStyleSheet("font-size: 14px; color: #fff;")
-                raw_date = transaction['date']
-                formatted_date = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y")
+                datetime_obj = QDateTime.fromString(transaction['date'], "yyyy-MM-dd HH:mm:ss")
+                date_obj = datetime_obj.date()
+                formatted_date = date_obj.toString("dd/MM/yyyy")
                 QDateTime.fromString(transaction['date'], "yyyy-MM-dd HH:mm:ss")
                 date_label = QLabel(formatted_date)
                 date_label.setStyleSheet("font-size: 12px; color: #888888;")
@@ -289,7 +355,6 @@ class DashboardScreen(QWidget):
         layout.addStretch()
 
     def create_category_statistics_widget(self):
-        """Tạo widget cho biểu đồ danh mục"""
         self.category_statistics_widget = QWidget()
         layout = QVBoxLayout(self.category_statistics_widget)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -304,8 +369,8 @@ class DashboardScreen(QWidget):
         """)
         layout.addWidget(title_label)
 
-        # Tạo figure và canvas cho biểu đồ
-        self.figure_cat, self.ax_cat = plt.subplots(figsize=(5, 5))
+        self.figure_cat, self.ax_cat = plt.subplots(figsize=(5, 5), dpi=100)
+
         self.canvas_cat = FigureCanvas(self.figure_cat)
 
         # Đặt màu nền cho biểu đồ
@@ -315,7 +380,7 @@ class DashboardScreen(QWidget):
         # Bọc canvas trong một QFrame để áp dụng border-radius
         frame = QFrame()
         frame_layout = QVBoxLayout(frame)
-        frame_layout.setContentsMargins(0, 0, 0, 0)
+        frame_layout.setContentsMargins(5, 5, 5, 5)
         frame_layout.addWidget(self.canvas_cat)
         frame.setStyleSheet("""
             QFrame {
@@ -327,39 +392,44 @@ class DashboardScreen(QWidget):
         layout.addWidget(frame)
 
     def generate_category_statistics(self):
-        """Hàm vẽ biểu đồ danh mục"""
         user_id = self.main_window.user_info['user_id']
         start_date_str = self.start_date.toString("yyyy-MM-dd")
         end_date_str = self.end_date.toString("yyyy-MM-dd")
         category_stats = self.main_window.db_manager.transaction_manager.get_category_statistics_by_date_range(user_id, start_date_str, end_date_str)
 
-        # Xóa biểu đồ cũ
         self.ax_cat.clear()
 
+        # Thêm dòng này để điều chỉnh không gian cho biểu đồ và legend
+        self.figure_cat.subplots_adjust(left=0.1, right=0.6, top=1.15, bottom=0.0)
+
+        if self.hover_connection is not None:
+            self.figure_cat.canvas.mpl_disconnect(self.hover_connection)
+            self.hover_connection = None
+
         if not category_stats:
-            # Nếu không có dữ liệu, hiển thị thông báo
-            self.ax_cat.text(0.5, 0.5, 'Không có dữ liệu để hiển thị', horizontalalignment='center',
-                             verticalalignment='center', transform=self.ax_cat.transAxes, color='white', fontsize=14)
-            self.ax_cat.set_facecolor('#1e1e1e')  # Màu nền của axes
-            self.ax_cat.axis('off')  # Tắt các trục
+            self.ax_cat.text(
+                0.5, 0.5,
+                'Không có dữ liệu để hiển thị',
+                horizontalalignment='center',
+                verticalalignment='center',
+                transform=self.ax_cat.transAxes,
+                color='white',
+                fontsize=14
+            )
+            self.ax_cat.set_facecolor('#1e1e1e')
+            self.ax_cat.axis('off')
         else:
-            # Tạo dữ liệu cho biểu đồ
             labels = [category[0] for category in category_stats]
             values = [category[1] for category in category_stats]
 
-            # Vẽ biểu đồ pie mà không hiển thị labels và percentages trên các phần
-            wedges = self.ax_cat.pie(
+            wedges, texts = self.ax_cat.pie(
                 values,
                 startangle=90,
-                colors=plt.cm.Set3.colors  # Sử dụng bảng màu
-            )[0]
-            self.ax_cat.axis('equal')  # Đảm bảo hình tròn
+                colors=plt.cm.Set3.colors,
+                wedgeprops=dict(edgecolor='white')
+            )
+            self.ax_cat.axis('equal')
 
-            # Thêm border màu trắng cho các phần của biểu đồ
-            for wedge in wedges:
-                wedge.set_edgecolor('white')
-
-            # Cập nhật legend với labels màu trắng
             legend = self.ax_cat.legend(
                 wedges,
                 labels,
@@ -370,27 +440,127 @@ class DashboardScreen(QWidget):
                 edgecolor='#1e1e1e',
                 labelcolor='white'
             )
-            # Đặt màu cho tiêu đề của legend
             plt.setp(legend.get_title(), color='white')
 
-            # Thêm sự kiện hover để hiển thị phần trăm
             def on_hover(event):
-                # Kiểm tra nếu con trỏ chuột nằm trong vùng biểu đồ
                 if event.inaxes == self.ax_cat:
                     for i, wedge in enumerate(wedges):
-                        if wedge.contains_point([event.x, event.y]):
+                        contains = wedge.contains_point([event.x, event.y])
+                        if contains:
                             percentage = values[i] / sum(values) * 100
-                            self.ax_cat.set_title(f"{labels[i]}: {percentage:.1f}%", color='white', fontsize=14, y=0.1)
+                            self.ax_cat.set_title(f"{labels[i]}: {percentage:.1f}%", color='white', fontsize=14, y=0.05)
                             self.canvas_cat.draw()
                             break
                     else:
                         self.ax_cat.set_title('')
                         self.canvas_cat.draw()
 
-            self.figure_cat.canvas.mpl_connect("motion_notify_event", on_hover)
+            self.hover_connection = self.figure_cat.canvas.mpl_connect("motion_notify_event", on_hover)
 
-        self.figure_cat.tight_layout()
         self.canvas_cat.draw()
+
+    def create_total_summary_chart_widget(self):
+        self.total_summary_chart_widget = QWidget()
+        self.total_summary_chart_widget.setContentsMargins(0, 10, 0, 0)
+
+        # Tạo layout chính cho widget
+        layout = QVBoxLayout(self.total_summary_chart_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+
+        # Thêm tiêu đề cho biểu đồ
+        title_label = QLabel("Tổng Số Thu Chi Tiêu")
+        title_label.setStyleSheet("""
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        """)
+        layout.addWidget(title_label)
+
+        # Tạo figure và canvas cho biểu đồ với figsize phù hợp
+        self.figure_total, self.ax_total = plt.subplots(figsize=(10, 4), dpi=100)
+        self.canvas_total = FigureCanvas(self.figure_total)
+
+        # Đặt màu nền cho biểu đồ
+        self.figure_total.patch.set_facecolor('#1e1e1e')  # Màu nền của figure
+        self.ax_total.set_facecolor('#1e1e1e')  # Màu nền của axes
+
+        # Bọc canvas trong một QFrame để áp dụng border-radius
+        frame = QFrame()
+        frame_layout = QVBoxLayout(frame)
+        frame_layout.setContentsMargins(5, 5, 5, 5)
+        frame_layout.addWidget(self.canvas_total)
+        frame.setStyleSheet("""
+            QFrame {
+                background-color: #1e1e1e;
+                border-radius: 10px;
+            }
+        """)
+
+        self.canvas_total.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+        layout.addWidget(frame, stretch=1)
+
+        self.layout.addWidget(self.total_summary_chart_widget)
+
+    def generate_total_summary_chart(self):
+        user_id = self.main_window.user_info['user_id']
+        start_date_str = self.start_date.toString("yyyy-MM-dd")
+        end_date_str = self.end_date.toString("yyyy-MM-dd")
+
+        # Lấy tổng thu và tổng chi trong khoảng thời gian hiện tại
+        total_income = self.main_window.db_manager.transaction_manager.get_total_income(user_id, start_date_str, end_date_str)
+        total_expense = self.main_window.db_manager.transaction_manager.get_total_expense(user_id, start_date_str, end_date_str)
+
+        # Xóa biểu đồ cũ
+        self.ax_total.clear()
+
+        if total_income == 0 and total_expense == 0:
+            # Hiển thị thông báo không có dữ liệu
+            self.ax_total.text(0.5, 0.5, 'Không có dữ liệu để hiển thị',
+                               horizontalalignment='center',
+                               verticalalignment='center',
+                               transform=self.ax_total.transAxes,
+                               color='white',
+                               fontsize=14)
+            self.ax_total.set_facecolor('#1e1e1e')
+            self.ax_total.axis('off')
+        else:
+            # Điều chỉnh không gian cho biểu đồ và legend
+            self.figure_total.subplots_adjust(left=0.2, right=0.85, top=0.85, bottom=0.15)
+
+            # Tạo dữ liệu cho biểu đồ
+            categories = ['Tổng Thu', 'Tổng Chi']
+            values = [total_income, total_expense]
+            colors = ['#2ecc71', '#e74c3c']  # Màu xanh lá cho thu, màu đỏ cho chi
+
+            # Vẽ biểu đồ cột
+            bars = self.ax_total.bar(categories, values, color=colors, width=0.6)
+
+            # Thiết lập giới hạn trục Y để tránh nhãn đụng lên
+            max_value = max(values)
+            self.ax_total.set_ylim(0, max_value * 1.2)  # Tăng 20% so với giá trị lớn nhất
+
+            # Thêm giá trị trên cột
+            for bar in bars:
+                height = bar.get_height()
+                self.ax_total.text(bar.get_x() + bar.get_width() / 2.0, height,
+                                   f"{height:,.0f} đ", ha='center',
+                                   va='bottom', color='white', fontsize=12)
+
+            # Đặt tiêu đề và màu sắc
+            self.ax_total.set_title("Tổng Thu Chi Tiêu", color='white', fontsize=16)
+            self.ax_total.set_facecolor('#1e1e1e')
+            self.ax_total.tick_params(axis='y', colors='white')
+            self.ax_total.tick_params(axis='x', colors='white')
+            self.ax_total.spines['bottom'].set_color('white')
+            self.ax_total.spines['left'].set_color('white')
+            self.ax_total.spines['right'].set_color('white')
+            self.ax_total.spines['top'].set_color('white')
+
+        # Hiển thị biểu đồ
+        self.canvas_total.draw()
 
     def handle_selection(self, index):
         current_text = self.combo_box.currentText()
@@ -421,5 +591,10 @@ class DashboardScreen(QWidget):
             end_day = QDate(today.year(), end_month, 1).daysInMonth()
             self.end_date = QDate(today.year(), end_month, end_day)
 
+        # Cập nhật phần tổng quan tài chính
+        self.update_overview_finance()
+
         # Cập nhật biểu đồ danh mục khi thay đổi khoảng thời gian
         self.generate_category_statistics()
+
+        self.generate_total_summary_chart()
