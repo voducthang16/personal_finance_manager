@@ -42,7 +42,7 @@ def generate_random_transaction_data(user_id, account_ids, income_categories, ex
             transaction_type = "Thu nhập"
             amount = 15000000  # Lương cố định
             description = f"Lương tháng {current_date.strftime('%m/%Y')}"
-            date = current_date.strftime('%Y-%m-%d %H:%M:%S')
+            date = current_date.strftime('%Y-%m-%d')  # Chỉ lấy ngày (bỏ giờ)
             transactions.append((user_id, account_id, category_id, amount, transaction_type, description, date))
 
         # Thêm giao dịch chi tiêu
@@ -65,7 +65,7 @@ def generate_random_transaction_data(user_id, account_ids, income_categories, ex
             amount = round_amount(amount)
 
             description = f"Giao dịch {transaction_type} ngày {current_date.strftime('%Y-%m-%d')}"
-            date = current_date.strftime('%Y-%m-%d %H:%M:%S')
+            date = current_date.strftime('%Y-%m-%d')  # Chỉ lấy ngày (bỏ giờ)
 
             transactions.append((user_id, account_id, category_id, amount, transaction_type, description, date))
 

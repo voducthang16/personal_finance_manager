@@ -10,10 +10,9 @@ class FinanceManager:
         self.db_name = db_name
         self.conn = sqlite3.connect(self.db_name)
         self.cursor = self.conn.cursor()
-        self.create_tables()
 
         self.user_manager = UserManager(self.cursor)
-        self.account_manager = AccountManager(self.cursor)
+        self.account_manager = AccountManager(self.cursor, self.user_manager)
         self.category_manager = CategoryManager(self.cursor)
         self.transaction_manager = TransactionManager(self.cursor)
 
@@ -78,6 +77,18 @@ class FinanceManager:
         """)
 
         self.conn.commit()
+
+    def set_migration(self):
+        default_categories = [
+            ("Đồ ăn", "Chi tiêu"),
+            ("Giải trí", "Chi tiêu"),
+            ("Lương", "Thu nhập"),
+            ("Mua sắm", "Chi tiêu"),
+            ("Chi phí sinh hoạt", "Chi tiêu"),
+        ]
+
+        for category_name, category_type in default_categories:
+            self.category_manager.add_category(category_name, category_type)
 
     def close(self):
         self.conn.close()

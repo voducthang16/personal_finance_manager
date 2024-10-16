@@ -35,23 +35,34 @@ class CategoryDialog(BaseDialog):
         }
 
     def submit(self):
-        data = self.get_category_data()
-        category_name = data["category_name"]
-        category_type = data["category_type"]
+        try:
+            data = self.get_category_data()
+            category_name = data["category_name"].strip()
+            category_type = data["category_type"]
 
-        if not category_name:
-            self.show_error_message("Vui lòng nhập tên danh mục.")
-            return
+            if not category_name:
+                self.message_box.show_error_message(
+                    "Vui lòng nhập tên danh mục hợp lệ (không được để trống hoặc chỉ có khoảng trắng).")
+                return
 
-        if self.category_id:
-            self.main_window.db_manager.category_manager.update_category(self.category_id, category_name, category_type)
-            self.message_box.show_success_message("Cập nhật danh mục thành công.")
-        else:
-            self.main_window.db_manager.category_manager.add_category(category_name, category_type)
-            self.message_box.show_success_message("Thêm danh mục thành công.")
+            if self.category_id:
+                result = self.main_window.db_manager.category_manager.update_category(self.category_id, category_name, category_type)
+            else:
+                result = self.main_window.db_manager.category_manager.add_category(category_name, category_type)
 
-        self.main_window.refresh_current_screen()
-        self.accept()
+            if result is not None:
+                self.message_box.show_error_message(result)
+            else:
+                if self.category_id:
+                    self.message_box.show_success_message("Cập nhật danh mục thành công.")
+                else:
+                    self.message_box.show_success_message("Thêm danh mục thành công.")
+
+                self.main_window.refresh_current_screen()
+                self.accept()
+
+        except Exception as e:
+            self.message_box.show_error_message(f"Đã xảy ra lỗi: {e}")
 
     def populate_data(self):
         self.category_name_input.setText(self.category_data.get("category_name", ""))

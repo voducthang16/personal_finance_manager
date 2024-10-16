@@ -17,10 +17,9 @@ from screens import DashboardScreen, AccountScreen, SettingScreen, TransactionSc
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setup_window_property()
-
         self.db_manager = None
         self.initialize_database()
+        self.setup_window_property()
         self.user_info = self.get_user_info()
 
         self.setContentsMargins(10, 10, 10, 10)
@@ -64,6 +63,7 @@ class MainWindow(QMainWindow):
             print(f"Tạo cơ sở dữ liệu mới: {db_file}")
             self.db_manager = FinanceManager(db_name=db_file)
             self.db_manager.create_tables()
+            self.db_manager.set_migration()
         else:
             print(f"Cơ sở dữ liệu đã tồn tại: {db_file}")
             self.db_manager = FinanceManager(db_name=db_file)

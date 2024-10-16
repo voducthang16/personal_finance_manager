@@ -101,23 +101,8 @@ class SetupLayout(QWidget):
             user_id = user['user_id']
 
             self.main_window.db_manager.account_manager.add_account(user_id, account_name, account_balance)
-            self.add_default_categories()
-
             self.main_window.user_info = self.main_window.get_user_info()
 
             self.main_window.show_main_screen()
         except sqlite3.Error as e:
             print(f"Lỗi khi thêm người dùng hoặc tài khoản: {e}")
-
-    def add_default_categories(self):
-        default_categories = [
-            ("Đồ ăn", "Chi tiêu"),
-            ("Giải trí", "Chi tiêu"),
-            ("Lương", "Thu nhập"),
-            ("Mua sắm", "Chi tiêu"),
-            ("Tiết kiệm", "Thu nhập"),
-            ("Chi phí sinh hoạt", "Chi tiêu"),
-        ]
-
-        for category_name, category_type in default_categories:
-            self.main_window.db_manager.category_manager.add_category(category_name, category_type)

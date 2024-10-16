@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import QLineEdit
-from PyQt5.QtGui import QDoubleValidator
+from PyQt5.QtGui import QIntValidator
 
 from dialogs.base_dialog import BaseDialog
-
+import re
 
 class AccountDialog(BaseDialog):
     def __init__(self, main_window=None, account_data=None):
@@ -26,7 +26,7 @@ class AccountDialog(BaseDialog):
         self.balance_input = QLineEdit()
         self.balance_input.setFixedHeight(40)
         self.balance_input.setPlaceholderText("Nhập số dư")
-        self.balance_input.setValidator(QDoubleValidator(0.00, 1000000000.00, 2))
+        self.balance_input.setValidator(QIntValidator(0, 1000000000))
         self.add_content(self.create_row("Số dư:", self.balance_input))
 
     def get_account_data(self):
@@ -37,29 +37,46 @@ class AccountDialog(BaseDialog):
 
     def submit(self):
         data = self.get_account_data()
-        account_name = data["account_name"]
+        account_name = data["account_name"].strip()
         balance = data["balance"]
 
         if not account_name or not balance:
-            self.show_error_message("Vui lòng nhập đầy đủ thông tin.")
+            self.message_box.show_error_message("Vui lòng nhập đầy đủ thông tin.")
+            return
+
+        if not re.match(r"^\d+$", balance):
+            self.message_box.show_error_message("Số dư phải là một số nguyên hợp lệ, chỉ bao gồm các chữ số.")
             return
 
         try:
-            balance_float = float(balance.replace(",", "").replace(" VND", ""))
+            # Chuyển đổi số dư sang dạng số nguyên (integer)
+            balance_int = int(balance)  # Chỉ chấp nhận số nguyên
+            if balance_int <= 0:
+                self.message_box.show_error_message("Số dư phải lớn hơn 0.")
+                return
         except ValueError:
-            self.message_box.show_error_message("Số dư phải là một số hợp lệ.")
+            self.message_box.show_error_message("Số dư phải là một số nguyên hợp lệ.")
             return
 
+        # Kiểm tra nếu có account_id thì cập nhật, nếu không thì thêm mới
         if self.account_id:
-            self.main_window.db_manager.account_manager.update_account(self.account_id, account_name, balance_float)
-            self.message_box.show_success_message("Cập nhật tài khoản thành công.")
+            result = self.main_window.db_manager.account_manager.update_account(self.account_id, account_name,
+                                                                                balance_int)
         else:
             user_id = self.main_window.user_info['user_id']
-            self.main_window.db_manager.account_manager.add_account(user_id, account_name, balance_float)
-            self.message_box.show_success_message("Thêm tài khoản thành công.")
+            result = self.main_window.db_manager.account_manager.add_account(user_id, account_name, balance_int)
 
-        self.main_window.refresh_current_screen()
-        self.accept()
+        # Kiểm tra kết quả trả về từ add/update
+        if result is not None:  # Nếu có lỗi, hiển thị thông báo lỗi
+            self.message_box.show_error_message(result)
+        else:
+            if self.account_id:
+                self.message_box.show_success_message("Cập nhật tài khoản thành công.")
+            else:
+                self.message_box.show_success_message("Thêm tài khoản thành công.")
+
+            self.main_window.refresh_current_screen()
+            self.accept()
 
     def populate_data(self):
         self.account_name_input.setText(self.account_data.get("account_name", ""))
