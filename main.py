@@ -297,11 +297,11 @@ class MainWindow(QMainWindow):
         current_time = QTime.currentTime()
         hour = current_time.hour()
 
-        if 5 <= hour < 12:
+        if 5 <= hour < 11:
             return "Chào buổi sáng"
-        elif 12 <= hour < 17:
+        elif 11 <= hour < 13:
             return "Chào buổi trưa"
-        elif 17 <= hour < 20:
+        elif 13 <= hour < 17:
             return "Chào buổi chiều"
         else:
             return "Chào buổi tối"

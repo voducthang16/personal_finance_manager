@@ -1,5 +1,5 @@
 import sqlite3
-
+import re
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QSpacerItem, QSizePolicy)
 from PyQt5.QtCore import Qt
 
@@ -84,25 +84,63 @@ class SetupLayout(QWidget):
         """)
         return input_field
 
+    def validate_inputs(self, name, email, account_name, account_balance):
+        # Validate all fields are not empty
+        if not name or not email or not account_name or not account_balance:
+            return "Vui lòng điền tất cả các trường."
+
+        # Validate email format
+        email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+        if not re.match(email_regex, email):
+            return "Email không hợp lệ."
+
+        # Validate account balance is a number and greater than 0
+        try:
+            account_balance = float(account_balance)
+            if account_balance <= 0:
+                return "Số dư phải lớn hơn 0."
+        except ValueError:
+            return "Số dư tài khoản phải là một số hợp lệ."
+
+        return None  # No errors
+
     def register(self):
         name = self.name_input.text()
         email = self.email_input.text()
         account_name = self.account_name_input.text()
         account_balance = self.account_balance_input.text()
 
-        if not name or not email or not account_name or not account_balance:
-            print("Vui lòng điền tất cả các trường.")
+        # Validate inputs
+        validation_error = self.validate_inputs(name, email, account_name, account_balance)
+        if validation_error:
+            print(validation_error)  # In a real app, you might want to display a dialog instead
             return
 
         try:
+            # Add user to the database
             self.main_window.db_manager.user_manager.add_user(name, email)
 
+            # Fetch the first user (assumed this is the newly added user)
             user = self.main_window.db_manager.user_manager.get_first_user()
+            if user is None:
+                print("Không thể tìm thấy người dùng vừa thêm.")
+                return
+
             user_id = user['user_id']
 
-            self.main_window.db_manager.account_manager.add_account(user_id, account_name, account_balance)
+            # Add account with the provided balance
+            account_balance_float = float(account_balance)
+            result = self.main_window.db_manager.account_manager.add_account(user_id, account_name, account_balance_float)
+
+            if result is not None:
+                print(result)  # In case of errors, print or show the error message
+                return
+
+            # Update the main window with the new user info
             self.main_window.user_info = self.main_window.get_user_info()
 
+            # Show the main screen after successful registration
             self.main_window.show_main_screen()
+
         except sqlite3.Error as e:
             print(f"Lỗi khi thêm người dùng hoặc tài khoản: {e}")
