@@ -19,7 +19,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.db_manager = None
         self.initialize_database()
-        self.setup_window_property()
         self.user_info = self.get_user_info()
 
         self.setContentsMargins(10, 10, 10, 10)
@@ -55,6 +54,7 @@ class MainWindow(QMainWindow):
         if not self.user_info:
             self.show_setup_screen()
         else:
+            self.setup_window_property()
             self.show_main_screen()
 
     def initialize_database(self):
@@ -69,32 +69,8 @@ class MainWindow(QMainWindow):
             self.db_manager = FinanceManager(db_name=db_file)
 
     def show_setup_screen(self):
-        main_widget = QWidget(self)
-
-        main_widget.setStyleSheet("""
-            background-color: #121212;
-            border-radius: 10px;
-        """)
-
-        main_layout = QVBoxLayout(main_widget)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setAlignment(Qt.AlignCenter)
-
         setup_screen = SetupLayout(main_window=self)
-        setup_screen_wrapper = QWidget()
-        setup_layout = QVBoxLayout(setup_screen_wrapper)
-        setup_layout.setContentsMargins(0, 0, 0, 0)
-        setup_layout.setAlignment(Qt.AlignCenter)
-
-        setup_screen_wrapper.setStyleSheet("""
-            background-color: #1e1e1e;
-        """)
-
-        setup_layout.addWidget(setup_screen)
-
-        main_layout.addWidget(setup_screen_wrapper)
-
-        self.setCentralWidget(main_widget)
+        self.setCentralWidget(setup_screen)
 
     def show_main_screen(self):
         main_widget = QWidget()
@@ -103,14 +79,12 @@ class MainWindow(QMainWindow):
 
         self.left_menu = LeftMenuWidget()
 
-        # Tạo layout bên phải với QVBoxLayout
         self.right_layout = QVBoxLayout()
         self.right_layout.setContentsMargins(0, 0, 0, 0)
         self.right_layout.setSpacing(10)
 
         self.top_info_widget = None
 
-        # Tạo stacked_widget
         self.stacked_widget = QStackedWidget()
         self.stacked_widget.setContentsMargins(0, 10, 0, 10)
         self.stacked_widget.setStyleSheet("""
@@ -119,7 +93,6 @@ class MainWindow(QMainWindow):
             color: white;
         """)
 
-        # init screens
         self.dashboard_screen = DashboardScreen(main_window=self)
         self.category_screen = CategoryScreen(main_window=self)
         self.transaction_screen = TransactionScreen(main_window=self)

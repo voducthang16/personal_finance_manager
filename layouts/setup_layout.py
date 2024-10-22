@@ -10,12 +10,18 @@ class SetupLayout(QWidget):
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
-        self.message_box = MessageBoxWidget()
+        self.message_box = MessageBoxWidget(self.main_window)
         self.init_ui()
 
     def init_ui(self):
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #121212;
+                border-radius: 10px;
+            }
+        """)
+
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setAlignment(Qt.AlignCenter)
 
         form_widget = QWidget()
@@ -28,7 +34,7 @@ class SetupLayout(QWidget):
         form_layout.addLayout(self.create_form_row('Tên tài khoản:', 'account_name_input'))
         form_layout.addLayout(self.create_form_row('Số dư tài khoản:', 'account_balance_input'))
 
-        self.register_button = QPushButton('Đăng ký')
+        self.register_button = QPushButton('Thiết lập')
         self.register_button.setFixedHeight(40)
         self.register_button.setStyleSheet("""
             QPushButton {
@@ -136,6 +142,7 @@ class SetupLayout(QWidget):
 
             self.main_window.user_info = self.main_window.get_user_info()
 
+            self.main_window.setup_window_property()
             self.main_window.show_main_screen()
 
         except sqlite3.Error as e:

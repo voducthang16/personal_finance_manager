@@ -258,17 +258,41 @@ class BaseDialog(QDialog):
         footer_widget.setFixedHeight(60)
 
         footer_layout = QHBoxLayout()
-        footer_layout.setAlignment(Qt.AlignCenter)
+        footer_layout.setAlignment(Qt.AlignRight)
         footer_layout.setContentsMargins(0, 0, 0, 0)
         footer_widget.setLayout(footer_layout)
 
         cancel_button = self.create_button("Hủy", "CancelButton", self.reject)
+        cancel_button.setStyleSheet("""
+            QPushButton#CancelButton {
+                background-color: #e74c3c;
+                color: #fff;
+                border: none;
+                border-radius: 6px;
+                min-width: 100px;
+                font-size: 16px;
+            }
+            QPushButton#CancelButton:hover {
+                background-color: #c0392b;
+            }
+        """)
         submit_button = self.create_button("Lưu", "SubmitButton", self.submit)
+        submit_button.setStyleSheet("""
+            QPushButton#SubmitButton {
+                background-color: #5dade2;
+                color: #fff;
+                border: none;
+                border-radius: 6px;
+                min-width: 100px;
+                font-size: 16px;
+            }
+            QPushButton#SubmitButton:hover {
+                background-color: #3498db;
+            }
+        """)
 
-        footer_layout.addStretch()
         footer_layout.addWidget(cancel_button)
         footer_layout.addWidget(submit_button)
-        footer_layout.addStretch()
 
         self.main_layout.addWidget(footer_widget)
 
