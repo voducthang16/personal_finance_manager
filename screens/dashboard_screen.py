@@ -142,7 +142,7 @@ class DashboardScreen(QWidget):
         frame.setStyleSheet("""
             QFrame {
                 background-color: #1e1e1e;
-                border-radius: 10px;
+                border-radius: 8px;
                 padding: 10px;
             }
             QFrame:hover {
@@ -331,7 +331,7 @@ class DashboardScreen(QWidget):
                     qproperty-alignment: AlignCenter;
                 }
             """)
-            no_data_label.setFixedHeight(56)
+            no_data_label.setFixedHeight(320)
             content_layout.addWidget(no_data_label)
             content_layout.addStretch()
         else:
@@ -423,7 +423,7 @@ class DashboardScreen(QWidget):
         frame.setStyleSheet("""
             QFrame {
                 background-color: #1e1e1e;
-                border-radius: 10px;
+                border-radius: 8px;
             }
         """)
 
@@ -503,12 +503,10 @@ class DashboardScreen(QWidget):
         self.total_summary_chart_widget = QWidget()
         self.total_summary_chart_widget.setContentsMargins(0, 10, 0, 0)
 
-        # Tạo layout chính cho widget
         layout = QVBoxLayout(self.total_summary_chart_widget)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(10)
 
-        # Thêm tiêu đề cho biểu đồ
         title_label = QLabel("Tổng Số Thu Chi Tiêu")
         title_label.setStyleSheet("""
             font-size: 18px;
@@ -525,7 +523,7 @@ class DashboardScreen(QWidget):
         self.figure_total.patch.set_facecolor('#1e1e1e')  # Màu nền của figure
         self.ax_total.set_facecolor('#1e1e1e')  # Màu nền của axes
 
-        # Bọc canvas trong một QFrame để áp dụng border-radius
+        # Bọc canvas trong một QFrame
         frame = QFrame()
         frame_layout = QVBoxLayout(frame)
         frame_layout.setContentsMargins(5, 5, 5, 5)
@@ -533,7 +531,7 @@ class DashboardScreen(QWidget):
         frame.setStyleSheet("""
             QFrame {
                 background-color: #1e1e1e;
-                border-radius: 10px;
+                border-radius: 8px;
             }
         """)
 
@@ -586,9 +584,12 @@ class DashboardScreen(QWidget):
             # Thêm giá trị trên cột
             for bar in bars:
                 height = bar.get_height()
-                self.ax_total.text(bar.get_x() + bar.get_width() / 2.0, height,
-                                   f"{height:,.0f} đ", ha='center',
-                                   va='bottom', color='white', fontsize=12)
+                self.ax_total.text(
+                    bar.get_x() + bar.get_width() / 2.0,
+                   height,
+                   f"{height:,.0f} đ", ha='center',
+                   va='bottom', color='white', fontsize=12
+                )
 
             # Đặt tiêu đề và màu sắc
             self.ax_total.set_title("Tổng Thu Chi Tiêu", color='white', fontsize=16)

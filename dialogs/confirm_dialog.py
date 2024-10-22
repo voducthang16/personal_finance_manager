@@ -1,7 +1,6 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QHBoxLayout
 from PyQt5.QtCore import Qt
 
-
 class ConfirmDialog(QDialog):
     def __init__(self, title="Xác nhận", message="Bạn có chắc chắn?", parent=None):
         super().__init__(parent)
@@ -14,52 +13,40 @@ class ConfirmDialog(QDialog):
 
         label = QLabel(message)
         label.setWordWrap(True)
+        label.setStyleSheet("font-size: 18px;")
         label.setAlignment(Qt.AlignCenter)
         layout.addWidget(label)
 
-        # Divider
         divider = QLabel()
         divider.setFixedHeight(1)
         divider.setStyleSheet("background-color: #292929;")
         layout.addWidget(divider)
 
-        # Footer layout cho nút
         button_layout = QHBoxLayout()
         layout.addLayout(button_layout)
-
-        # Căn các nút qua bên phải
         button_layout.addStretch(1)
 
-        self.no_button = QPushButton("No")
-        self.no_button.setFixedHeight(30)
-        self.no_button.setStyleSheet("""
-            QPushButton {
-                background-color: #dc3545;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                padding: 4px 10px;
-            }
-            QPushButton:hover {
-                background-color: #c82333;
-            }
-        """)
-        self.no_button.clicked.connect(self.reject)
-        button_layout.addWidget(self.no_button)
+        self.no_button = self.create_button("Không", "#dc3545", "#c82333", self.reject)
+        self.yes_button = self.create_button("Có", "#28a745", "#218838", self.accept)
 
-        self.yes_button = QPushButton("Yes")
-        self.yes_button.setFixedHeight(30)
-        self.yes_button.setStyleSheet("""
-            QPushButton {
-                background-color: #28a745;
-                color: white;
+        button_layout.addWidget(self.no_button)
+        button_layout.addWidget(self.yes_button)
+
+    def create_button(self, text, bg_color, hover_color, callback):
+        button = QPushButton(text)
+        button.setFixedHeight(30)
+        button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {bg_color};
+                color: #fff;
                 border: none;
                 border-radius: 6px;
-                padding: 4px 10px;
-            }
-            QPushButton:hover {
-                background-color: #218838;
-            }
+                min-width: 100px;
+                font-size: 16px;
+            }}
+            QPushButton:hover {{
+                background-color: {hover_color};
+            }}
         """)
-        self.yes_button.clicked.connect(self.accept)
-        button_layout.addWidget(self.yes_button)
+        button.clicked.connect(callback)
+        return button
