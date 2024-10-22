@@ -11,7 +11,7 @@ class AccountScreen(QWidget):
         self.main_window = main_window
         self.message_box = MessageBoxWidget(self)
         self.setContentsMargins(10, 0, 10, 0)
-        self.page_size = 3
+        self.page_size = 10
         self.current_page = 0
         self.total_pages = 1
 

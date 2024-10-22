@@ -90,12 +90,11 @@ class TransactionScreen(QWidget):
             category_name = transaction['category_name']
             amount = transaction['amount']
             transaction_type = transaction['transaction_type']
-            raw_date = transaction['created_at']
+            raw_date = transaction['date']
             description = transaction['description']
 
             amount_formatted = f"{amount:,.0f} VND"
-            formatted_date = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y")
-
+            formatted_date = datetime.strptime(raw_date, "%Y-%m-%d").strftime("%d/%m/%Y")
             formatted_data.append({
                 'transaction_id': transaction_id,
                 'account_name': account_name,

@@ -190,7 +190,6 @@ class DashboardScreen(QWidget):
         start_date_str = self.start_date.toString("yyyy-MM-dd")
         end_date_str = self.end_date.toString("yyyy-MM-dd")
 
-        # Xác định loại khoảng thời gian hiện tại
         current_text = self.combo_box.currentText()
         if current_text == "Hôm nay":
             period_type = "hôm"
@@ -316,21 +315,42 @@ class DashboardScreen(QWidget):
             if widget_to_remove is not None and widget_to_remove != self.title_label:
                 widget_to_remove.deleteLater()
 
+        content_container = QWidget()
+        content_layout = QVBoxLayout(content_container)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(10)
+
         if not transactions:
             no_data_label = QLabel("Không có giao dịch nào")
-            no_data_label.setStyleSheet("font-size: 14px; color: #888888;")
-            layout.addWidget(no_data_label)
+            no_data_label.setStyleSheet("""
+                QLabel {
+                    font-size: 18px;
+                    background-color: #1e1e1e;
+                    border-radius: 8px;
+                    padding: 16px;
+                    qproperty-alignment: AlignCenter;
+                }
+            """)
+            no_data_label.setFixedHeight(56)
+            content_layout.addWidget(no_data_label)
+            content_layout.addStretch()
         else:
             for transaction in transactions:
                 transaction_widget = QFrame()
                 transaction_widget.setFixedHeight(56)
                 transaction_layout = QHBoxLayout(transaction_widget)
+                transaction_layout.setContentsMargins(16, 0, 16, 0)
+
                 left_layout = QVBoxLayout()
+                left_layout.setSpacing(4)
+
                 category_label = QLabel(transaction['category_name'])
                 category_label.setStyleSheet("""
                     font-size: 14px;
                     color: #fff;
+                    font-weight: 500;
                 """)
+
                 datetime_obj = QDateTime.fromString(transaction['date'], "yyyy-MM-dd")
                 date_obj = datetime_obj.date()
                 formatted_date = date_obj.toString("dd/MM/yyyy")
@@ -339,41 +359,39 @@ class DashboardScreen(QWidget):
                     font-size: 11px;
                     color: #888888;
                 """)
+
                 left_layout.addWidget(category_label)
                 left_layout.addWidget(date_label)
-                left_layout.addStretch()
 
                 amount_label = QLabel(f"{transaction['amount']:,} đ")
                 amount_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-                amount_label.setStyleSheet("""
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #e74c3c;
-                """)
 
                 if transaction['transaction_type'] == 'Thu nhập':
-                    amount_label.setStyleSheet("""
-                        font-size: 16px;
-                        font-weight: bold;
-                        color: #2ecc71;
-                    """)
+                    amount_color = "#2ecc71"
+                else:
+                    amount_color = "#e74c3c"
+
+                amount_label.setStyleSheet(f"""
+                    font-size: 16px;
+                    font-weight: bold;
+                    color: {amount_color};
+                """)
 
                 transaction_layout.addLayout(left_layout)
                 transaction_layout.addWidget(amount_label)
 
-                transaction_widget.setLayout(transaction_layout)
                 transaction_widget.setStyleSheet("""
                     QFrame {
                         background-color: #1e1e1e;
                         border-radius: 8px;
-                        padding: 0;
-                        margin: 0;
                     }
                 """)
 
-                layout.addWidget(transaction_widget)
+                content_layout.addWidget(transaction_widget)
 
-        layout.addStretch()
+            content_layout.addStretch()
+
+        layout.addWidget(content_container)
 
     def create_category_statistics_widget(self):
         self.category_statistics_widget = QWidget()
@@ -381,7 +399,6 @@ class DashboardScreen(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(10)
 
-        # Thêm tiêu đề cho biểu đồ
         title_label = QLabel("Thống kê danh mục")
         title_label.setStyleSheet("""
             font-size: 18px;
@@ -411,6 +428,7 @@ class DashboardScreen(QWidget):
         """)
 
         layout.addWidget(frame)
+        layout.addStretch()
 
     def generate_category_statistics(self):
         user_id = self.main_window.user_info['user_id']
@@ -429,7 +447,8 @@ class DashboardScreen(QWidget):
 
         if not category_stats:
             self.ax_cat.text(
-                0.5, 0.5,
+                0.5,
+                0.5,
                 'Không có dữ liệu để hiển thị',
                 horizontalalignment='center',
                 verticalalignment='center',
@@ -540,11 +559,12 @@ class DashboardScreen(QWidget):
         if total_income == 0 and total_expense == 0:
             # Hiển thị thông báo không có dữ liệu
             self.ax_total.text(0.5, 0.5, 'Không có dữ liệu để hiển thị',
-                               horizontalalignment='center',
-                               verticalalignment='center',
-                               transform=self.ax_total.transAxes,
-                               color='white',
-                               fontsize=14)
+               horizontalalignment='center',
+               verticalalignment='center',
+               transform=self.ax_total.transAxes,
+               color='white',
+               fontsize=14
+            )
             self.ax_total.set_facecolor('#1e1e1e')
             self.ax_total.axis('off')
         else:
@@ -554,7 +574,7 @@ class DashboardScreen(QWidget):
             # Tạo dữ liệu cho biểu đồ
             categories = ['Tổng Thu', 'Tổng Chi']
             values = [total_income, total_expense]
-            colors = ['#2ecc71', '#e74c3c']  # Màu xanh lá cho thu, màu đỏ cho chi
+            colors = ['#2ecc71', '#e74c3c']
 
             # Vẽ biểu đồ cột
             bars = self.ax_total.bar(categories, values, color=colors, width=0.6)
