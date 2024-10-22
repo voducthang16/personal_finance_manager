@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMessageBox, QWidget
+from PyQt5.QtWidgets import QMessageBox, QWidget, QDesktopWidget
 
 
 class MessageBoxWidget(QWidget):
@@ -8,7 +8,7 @@ class MessageBoxWidget(QWidget):
 
     def show_message_box(self, title, message, icon_type):
         msg_box = QMessageBox(self.parent)
-        msg_box.setFixedSize(300, 150)
+        msg_box.setFixedSize(400, 250)
         msg_box.setWindowTitle(title)
         msg_box.setText(message)
         msg_box.setIcon(icon_type)
@@ -55,14 +55,24 @@ class MessageBoxWidget(QWidget):
         """
         msg_box.setStyleSheet(style)
 
-        if self.parent:
-            parent_center = self.parent.geometry().center()
-            msg_box.move(
-                parent_center.x() - 150,
-                parent_center.y() - 75
-            )
+        self.center_on_screen(msg_box)
 
         msg_box.exec_()
+
+    def center_on_screen(self, msg_box):
+        # Get the screen geometry or the parent geometry if available
+        if self.parent:
+            geometry = self.parent.geometry()
+        else:
+            screen = QDesktopWidget().availableGeometry()
+            geometry = screen
+
+        # Calculate the center position
+        center_x = geometry.center().x() - (msg_box.width() // 2)
+        center_y = geometry.center().y() - (msg_box.height() // 2)
+
+        # Move the message box to the center
+        msg_box.move(center_x, center_y)
 
     def show_success_message(self, message):
         self.show_message_box("Thành công", message, QMessageBox.Information)

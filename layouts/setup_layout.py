@@ -1,5 +1,7 @@
 import sqlite3
 import re
+
+from PyQt5.QtGui import QIntValidator
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QSpacerItem, QSizePolicy)
 from PyQt5.QtCore import Qt
 
@@ -32,7 +34,7 @@ class SetupLayout(QWidget):
         form_layout.addLayout(self.create_form_row('Họ và tên:', 'name_input'))
         form_layout.addLayout(self.create_form_row('Email:', 'email_input'))
         form_layout.addLayout(self.create_form_row('Tên tài khoản:', 'account_name_input'))
-        form_layout.addLayout(self.create_form_row('Số dư tài khoản:', 'account_balance_input'))
+        form_layout.addLayout(self.create_form_row('Số dư tài khoản:', 'account_balance_input', True))
 
         self.register_button = QPushButton('Thiết lập')
         self.register_button.setFixedHeight(40)
@@ -62,7 +64,7 @@ class SetupLayout(QWidget):
 
         self.setLayout(main_layout)
 
-    def create_form_row(self, label_text, input_name):
+    def create_form_row(self, label_text, input_name, is_number=False):
         label = QLabel(label_text)
         label.setStyleSheet("""
             color: white;
@@ -71,6 +73,9 @@ class SetupLayout(QWidget):
 
         input_field = self.create_styled_input()
         setattr(self, input_name, input_field)
+
+        if is_number:
+            input_field.setValidator(QIntValidator(0, 1000000000))
 
         row_layout = QHBoxLayout()
         row_layout.addWidget(label, 1)
@@ -101,7 +106,7 @@ class SetupLayout(QWidget):
             return "Email không hợp lệ."
 
         if not re.match(r"^\d+$", account_balance):
-            return "Số dư phải là một số nguyên hợp lệ, chỉ bao gồm các chữ số."
+            return "Số dư phải là một số nguyên hợp lệ."
 
         try:
             account_balance = int(account_balance)
