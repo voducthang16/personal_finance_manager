@@ -43,6 +43,7 @@ class TransactionDialog(BaseDialog):
         self.date_edit = QDateEdit()
         self.date_edit.setDate(QDate.currentDate())
         self.date_edit.setCalendarPopup(True)
+        self.date_edit.setMaximumDate(QDate.currentDate())
         self.add_content(self.create_row("Ngày giao dịch:", self.date_edit))
 
         self.account_combo = QComboBox()
@@ -51,7 +52,7 @@ class TransactionDialog(BaseDialog):
     def populate_accounts(self):
         self.account_combo.clear()
         user_id = self.main_window.user_info['user_id']
-        limit = 10
+        limit = 100
         offset = 0
 
         accounts = self.main_window.db_manager.account_manager.get_accounts_for_user(user_id, limit, offset)
@@ -86,23 +87,23 @@ class TransactionDialog(BaseDialog):
     def get_transaction_data(self):
         return {
             "amount": self.amount_input.text(),
-            "type": self.type_combo.currentText(),
-            "category_name": self.category_combo.currentText(),
+            "transaction_type": self.type_combo.currentText(),
+            "category_id": self.category_combo.currentData(),
             "description": self.description_input.text(),
             "date": self.date_edit.date().toString("yyyy-MM-dd"),
-            "account": self.account_combo.currentText()
+            "account_id": self.account_combo.currentData()
         }
 
     def submit(self):
         data = self.get_transaction_data()
         amount = data["amount"]
-        transaction_type = data["type"]
-        category_name = data["category_name"]
+        transaction_type = data["transaction_type"]
+        category_id = data["category_id"]
         description = data["description"]
         date = data["date"]
-        account = data["account"]
+        account_id = data["account_id"]
 
-        if not amount or not transaction_type or not category_name or not account:
+        if not amount or not transaction_type or not category_id or not account_id:
             self.message_box.show_error_message("Vui lòng nhập đầy đủ thông tin")
             return
 
@@ -112,29 +113,29 @@ class TransactionDialog(BaseDialog):
             self.message_box.show_error_message("Số tiền phải là một số")
             return
 
-        category_id = self.main_window.db_manager.category_manager.get_category_id_by_name(category_name)
         if self.transaction_id:
             self.main_window.db_manager.transaction_manager.update_transaction(
                 transaction_id=self.transaction_id,
                 amount=amount_int,
                 transaction_type=transaction_type,
                 category_id=category_id,
+                account_id=account_id,
                 description=description,
                 date=date
             )
-            self.message_box.show_success_message("Cập nhật giao dịch thành công.")
+            self.message_box.show_success_message("Cập nhật giao dịch thành công")
         else:
             user_id = self.main_window.user_info['user_id']
             self.main_window.db_manager.transaction_manager.add_transaction(
                 user_id=user_id,
-                account_id=self.account_combo.currentData(),
-                category_id=self.category_combo.currentData(),
+                account_id=account_id,
+                category_id=category_id,
                 amount=amount_int,
                 transaction_type=transaction_type,
                 description=description,
-                date=date
+                date=date,
             )
-            self.message_box.show_success_message("Thêm giao dịch thành công.")
+            self.message_box.show_success_message("Thêm giao dịch thành công")
 
         self.main_window.refresh_current_screen()
         self.accept()

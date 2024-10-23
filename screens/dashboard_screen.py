@@ -189,7 +189,6 @@ class DashboardScreen(QWidget):
         user_id = self.main_window.user_info['user_id']
         start_date_str = self.start_date.toString("yyyy-MM-dd")
         end_date_str = self.end_date.toString("yyyy-MM-dd")
-
         current_text = self.combo_box.currentText()
         if current_text == "Hôm nay":
             period_type = "hôm"
@@ -222,7 +221,6 @@ class DashboardScreen(QWidget):
             prev_start_date = self.start_date.addDays(-1)
             prev_end_date = self.end_date.addDays(-1)
         else:
-            # Mặc định
             prev_start_date = self.start_date.addDays(-delta_days)
             prev_end_date = self.end_date.addDays(-1)
 

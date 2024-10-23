@@ -118,6 +118,6 @@ class CategoryScreen(QWidget):
             try:
                 self.main_window.db_manager.category_manager.delete_category(category_id)
                 self.load_categories()
-                self.message_box.show_success_message("Danh mục đã được xóa thành công.")
+                self.message_box.show_success_message("Danh mục đã được xóa thành công")
             except Exception as e:
                 self.message_box.show_error_message(f"Đã xảy ra lỗi khi xóa danh mục: {e}")

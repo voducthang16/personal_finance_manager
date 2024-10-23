@@ -37,12 +37,10 @@ class ActionWidget(QWidget):
         self.edit_button.clicked.connect(lambda: edit_callback(row) if edit_callback else None)
         self.delete_button.clicked.connect(lambda: delete_callback(row) if delete_callback else None)
 
-        # Create layout
         layout = QHBoxLayout(self)
         layout.addWidget(self.edit_button)
         layout.addWidget(self.delete_button)
         layout.setContentsMargins(5, 0, 5, 0)
         layout.setSpacing(5)
 
-        # Set the layout for this widget
         self.setLayout(layout)

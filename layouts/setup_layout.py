@@ -99,21 +99,21 @@ class SetupLayout(QWidget):
 
     def validate_inputs(self, name, email, account_name, account_balance):
         if not name or not email or not account_name or not account_balance:
-            return "Vui lòng điền tất cả các trường."
+            return "Vui lòng điền tất cả các trường"
 
         email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
         if not re.match(email_regex, email):
-            return "Email không hợp lệ."
+            return "Email không hợp lệ"
 
         if not re.match(r"^\d+$", account_balance):
-            return "Số dư phải là một số nguyên hợp lệ."
+            return "Số dư phải là một số nguyên hợp lệ"
 
         try:
             account_balance = int(account_balance)
             if account_balance <= 0:
-                return "Số dư phải lớn hơn 0."
+                return "Số dư phải lớn hơn 0"
         except ValueError:
-            return "Số dư tài khoản phải là một số hợp lệ."
+            return "Số dư tài khoản phải là một số hợp lệ"
 
         return None
 
@@ -137,10 +137,6 @@ class SetupLayout(QWidget):
 
             account_balance_float = float(account_balance)
             result = self.main_window.db_manager.account_manager.add_account(user_id, account_name, account_balance_float)
-
-            if result is not None:
-                print(result)
-                return
 
             self.main_window.user_info = self.main_window.get_user_info()
 

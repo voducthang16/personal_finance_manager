@@ -35,6 +35,6 @@ class UserManager:
         row = self.cursor.fetchone()
         if row:
             columns = [description[0] for description in self.cursor.description]
-            user_dict = tuples_to_dicts([row], columns)[0]  # Vì chỉ có 1 kết quả nên lấy phần tử đầu tiên
+            user_dict = tuples_to_dicts([row], columns)[0]
             return user_dict
         return None

@@ -69,7 +69,7 @@ class AccountDialog(BaseDialog):
             if self.account_id:
                 self.message_box.show_success_message("Cập nhật tài khoản thành công")
             else:
-                self.message_box.show_success_message("Thêm tài khoản thành công.")
+                self.message_box.show_success_message("Thêm tài khoản thành công")
 
             self.main_window.refresh_current_screen()
             self.accept()

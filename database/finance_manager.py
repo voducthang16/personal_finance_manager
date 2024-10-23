@@ -18,7 +18,6 @@ class FinanceManager:
 
     def create_tables(self):
 
-        # Tạo bảng users
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,7 +29,6 @@ class FinanceManager:
         )
         """)
 
-        # Tạo bảng accounts
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS accounts (
             account_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,7 +42,6 @@ class FinanceManager:
         )
         """)
 
-        # Tạo bảng categories
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS categories (
             category_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,7 +53,6 @@ class FinanceManager:
         )
         """)
 
-        # Tạo bảng transactions
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS transactions (
             transaction_id INTEGER PRIMARY KEY AUTOINCREMENT,

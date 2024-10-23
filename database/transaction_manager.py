@@ -9,16 +9,13 @@ class TransactionManager:
 
     def add_transaction(self, user_id, account_id, category_id, amount, transaction_type, description, date):
         try:
-            # Bắt đầu transaction để đảm bảo tính toàn vẹn dữ liệu
             self.cursor.connection.execute("BEGIN TRANSACTION")
 
-            # Thêm giao dịch vào bảng transactions
             self.cursor.execute("""
             INSERT INTO transactions (user_id, account_id, category_id, amount, transaction_type, description, date, created_at, updated_at, is_deleted)
             VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
             """, (user_id, account_id, category_id, amount, transaction_type, description, date))
 
-            # Cập nhật số dư trong tài khoản
             if transaction_type == "Thu nhập":
                 self.cursor.execute("""
                 UPDATE accounts
@@ -32,15 +29,13 @@ class TransactionManager:
                 WHERE account_id = ? AND user_id = ?
                 """, (amount, account_id, user_id))
 
-            # Commit transaction nếu không có lỗi xảy ra
             self.cursor.connection.commit()
 
         except sqlite3.Error as e:
-            # Rollback nếu có lỗi
             self.cursor.connection.rollback()
             print(f"Lỗi khi thêm giao dịch: {e}")
 
-    def update_transaction(self, transaction_id, amount, transaction_type, category_id, description, date):
+    def update_transaction(self, transaction_id, amount, transaction_type, category_id, account_id, description, date):
         try:
             self.cursor.connection.execute("BEGIN TRANSACTION")
 
@@ -68,24 +63,23 @@ class TransactionManager:
 
                 self.cursor.execute("""
                 UPDATE transactions
-                SET amount = ?, transaction_type = ?, category_id = ?, description = ?, date = ?, updated_at = CURRENT_TIMESTAMP
+                SET amount = ?, transaction_type = ?, category_id = ?, description = ?, date = ?, account_id = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE transaction_id = ? AND is_deleted = 0
-                """, (amount, transaction_type, category_id, description, date, transaction_id))
+                """, (amount, transaction_type, category_id, description, date, account_id, transaction_id))
 
                 if transaction_type == "Thu nhập":
                     self.cursor.execute("""
                     UPDATE accounts
                     SET balance = balance + ?
                     WHERE account_id = ?
-                    """, (amount, old_account_id))
+                    """, (amount, account_id))
                 elif transaction_type == "Chi tiêu":
                     self.cursor.execute("""
                     UPDATE accounts
                     SET balance = balance - ?
                     WHERE account_id = ?
-                    """, (amount, old_account_id))
+                    """, (amount, account_id))
 
-                # Commit thay đổi
                 self.cursor.connection.commit()
             else:
                 print("Giao dịch không tồn tại hoặc đã bị xóa.")
@@ -107,7 +101,6 @@ class TransactionManager:
             if transaction:
                 account_id, amount, transaction_type = transaction
 
-                # Hoàn tác số dư dựa trên loại giao dịch
                 if transaction_type == "Thu nhập":
                     self.cursor.execute("""
                     UPDATE accounts
@@ -121,14 +114,12 @@ class TransactionManager:
                     WHERE account_id = ?
                     """, (amount, account_id))
 
-                # Đánh dấu giao dịch là đã xóa
                 self.cursor.execute("""
                 UPDATE transactions
                 SET is_deleted = 1, updated_at = CURRENT_TIMESTAMP
                 WHERE transaction_id = ?
                 """, (transaction_id,))
 
-                # Commit transaction
                 self.cursor.connection.commit()
             else:
                 print("Giao dịch không tồn tại hoặc đã bị xóa.")
@@ -199,7 +190,7 @@ class TransactionManager:
         SELECT SUM(amount) FROM transactions 
         WHERE user_id = ? AND transaction_type = 'Thu nhập' AND date BETWEEN ? AND ? AND is_deleted = 0
         """, (user_id, start_date, end_date))
-        return self.cursor.fetchone()[0] or 0  # Nếu không có dữ liệu, trả về 0
+        return self.cursor.fetchone()[0] or 0
 
     def get_total_expense(self, user_id, start_date, end_date):
         self.cursor.execute("""

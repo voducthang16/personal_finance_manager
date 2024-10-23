@@ -38,7 +38,7 @@ class AccountManager:
                 VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
             """, (user_id, account_name, balance))
             self.cursor.connection.commit()
-            return None  # Thành công
+            return None
         except sqlite3.Error as e:
             return f"Lỗi khi thêm tài khoản: {e}"
 

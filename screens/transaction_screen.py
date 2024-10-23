@@ -124,9 +124,8 @@ class TransactionScreen(QWidget):
     def confirm_delete_transaction(self, row):
         transaction_data = self.table_widget.model._all_data[row]
         transaction_id = transaction_data['transaction_id']
-        transaction_description = transaction_data['description']
 
-        dialog = ConfirmDialog(title="Xác nhận xóa", message=f"Bạn có chắc chắn muốn xóa giao dịch '{transaction_description}'?", parent=self)
+        dialog = ConfirmDialog(title="Xác nhận xóa", message=f"Bạn có chắc chắn muốn xóa giao dịch?", parent=self)
         result = dialog.exec_()
 
         if result == QDialog.Accepted:

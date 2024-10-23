@@ -16,13 +16,11 @@ class CategoryDialog(BaseDialog):
             self.populate_data()
 
     def setup_category_fields(self):
-        # Input cho tên danh mục
         self.category_name_input = QLineEdit()
         self.category_name_input.setFixedHeight(40)
         self.category_name_input.setPlaceholderText("Nhập tên danh mục")
         self.add_content(self.create_row("Tên danh mục:", self.category_name_input))
 
-        # ComboBox cho loại danh mục (Chi tiêu, Thu nhập)
         self.type_combo = QComboBox()
         self.type_combo.addItems(["Chi tiêu", "Thu nhập"])
         self.type_combo.setFixedHeight(40)
@@ -54,9 +52,9 @@ class CategoryDialog(BaseDialog):
                 self.message_box.show_error_message(result)
             else:
                 if self.category_id:
-                    self.message_box.show_success_message("Cập nhật danh mục thành công.")
+                    self.message_box.show_success_message("Cập nhật danh mục thành công")
                 else:
-                    self.message_box.show_success_message("Thêm danh mục thành công.")
+                    self.message_box.show_success_message("Thêm danh mục thành công")
 
                 self.main_window.refresh_current_screen()
                 self.accept()
@@ -67,7 +65,6 @@ class CategoryDialog(BaseDialog):
     def populate_data(self):
         self.category_name_input.setText(self.category_data.get("category_name", ""))
         
-        # Chọn đúng loại danh mục trong ComboBox dựa trên dữ liệu đã lưu
         category_type = self.category_data.get("category_type", "")
         index = self.type_combo.findText(category_type)
         if index != -1:

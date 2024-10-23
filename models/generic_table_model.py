@@ -29,7 +29,7 @@ class GenericTableModel(QAbstractTableModel):
 
         if role == Qt.DisplayRole:
             if index.column() < len(self.headers):
-                # Trả về giá trị tương ứng với cột từ column_mapping
+                # return value with mapping column
                 return self._page_data[index.row()].get(self.column_mapping.get(index.column(), ""), "")
             else:
                 return ""

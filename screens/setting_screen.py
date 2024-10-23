@@ -149,7 +149,7 @@ class SettingScreen(QWidget):
             try:
                 self.main_window.db_manager.user_manager.update_user(self.main_window.user_info['user_id'], name, email)
                 self.main_window.user_info = self.main_window.db_manager.user_manager.get_first_user()
-                self.message_box.show_success_message("Thông tin đã được cập nhật thành công!")
+                self.message_box.show_success_message("Cập nhật thành công")
             except Exception as e:
                 self.message_box.show_error_message(f"Lỗi khi cập nhật thông tin: {e}")
         else:

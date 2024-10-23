@@ -125,6 +125,6 @@ class AccountScreen(QWidget):
             try:
                 self.main_window.db_manager.account_manager.delete_account(account_id)
                 self.load_accounts()
-                self.message_box.show_success_message("Tài khoản đã được xóa thành công.")
+                self.message_box.show_success_message("Tài khoản đã được xóa thành công")
             except Exception as e:
                 self.message_box.show_error_message(f"Đã xảy ra lỗi khi xóa tài khoản: {e}")
