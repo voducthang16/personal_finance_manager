@@ -40,9 +40,8 @@ class TransactionManager:
             self.cursor.connection.rollback()
             print(f"Lỗi khi thêm giao dịch: {e}")
 
-    def update_transaction(self, transaction_id, amount, transaction_type, description, date):
+    def update_transaction(self, transaction_id, amount, transaction_type, category_id, description, date):
         try:
-            # Bắt đầu transaction
             self.cursor.connection.execute("BEGIN TRANSACTION")
 
             self.cursor.execute("""
@@ -54,7 +53,6 @@ class TransactionManager:
             if old_transaction:
                 old_account_id, old_amount, old_transaction_type = old_transaction
 
-                # Hoàn tác thay đổi số dư của giao dịch cũ
                 if old_transaction_type == "Thu nhập":
                     self.cursor.execute("""
                     UPDATE accounts
@@ -68,14 +66,12 @@ class TransactionManager:
                     WHERE account_id = ?
                     """, (old_amount, old_account_id))
 
-                # Cập nhật giao dịch mới
                 self.cursor.execute("""
                 UPDATE transactions
-                SET amount = ?, transaction_type = ?, description = ?, date = ?, updated_at = CURRENT_TIMESTAMP
+                SET amount = ?, transaction_type = ?, category_id = ?, description = ?, date = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE transaction_id = ? AND is_deleted = 0
-                """, (amount, transaction_type, description, date, transaction_id))
+                """, (amount, transaction_type, category_id, description, date, transaction_id))
 
-                # Cập nhật lại số dư cho giao dịch mới
                 if transaction_type == "Thu nhập":
                     self.cursor.execute("""
                     UPDATE accounts
@@ -213,7 +209,6 @@ class TransactionManager:
         return self.cursor.fetchone()[0] or 0
 
     def get_total_balance(self, user_id):
-        """Lấy tổng số dư hiện tại từ tất cả các tài khoản, chỉ tính các tài khoản chưa bị xóa."""
         self.cursor.execute("""
         SELECT SUM(balance) FROM accounts 
         WHERE user_id = ? AND is_deleted = 0

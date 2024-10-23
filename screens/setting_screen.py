@@ -36,7 +36,7 @@ class SettingScreen(QWidget):
         self.header_widget = QWidget()
         header_layout = QVBoxLayout(self.header_widget)
         header_layout.setContentsMargins(10, 0, 10, 0)
-        title = QLabel("Quản Lý Tài Khoản", self.header_widget)
+        title = QLabel("Cài Đặt", self.header_widget)
         title.setFixedHeight(40)
         title.setStyleSheet("""
             QLabel {
@@ -58,7 +58,7 @@ class SettingScreen(QWidget):
         self.name_input.setFixedHeight(40)
         self.name_input.setStyleSheet("""
             QLineEdit {
-                background-color: #1e1e1e;
+                background-color: #292929;
                 color: white;
                 padding-left: 10px;
                 border-radius: 8px;
@@ -76,7 +76,7 @@ class SettingScreen(QWidget):
         self.email_input.setFixedHeight(40)
         self.email_input.setStyleSheet("""
             QLineEdit {
-                background-color: #1e1e1e;
+                background-color: #292929;
                 color: white;
                 padding-left: 10px;
                 border-radius: 8px;
@@ -115,7 +115,7 @@ class SettingScreen(QWidget):
         user_widget = QWidget()
         user_widget.setStyleSheet("""
             QWidget {
-                background-color: #292929;
+                background-color: #1e1e1e;
                 border-radius: 10px;
                 margin: 0 10px;
             }
@@ -142,7 +142,7 @@ class SettingScreen(QWidget):
         email = self.email_input.text().strip()
 
         if not name or not email:
-            self.message_box.show_error_message("Vui lòng điền đầy đủ thông tin!")
+            self.message_box.show_error_message("Vui lòng điền đầy đủ thông tin")
             return
 
         if self.is_edit_mode:

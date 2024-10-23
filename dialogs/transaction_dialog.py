@@ -34,7 +34,7 @@ class TransactionDialog(BaseDialog):
         self.add_content(self.create_row("Loại giao dịch:", self.type_combo))
 
         self.category_combo = QComboBox()
-        self.add_content(self.create_row("Hạng mục:", self.category_combo))
+        self.add_content(self.create_row("Danh mục:", self.category_combo))
 
         self.description_input = QLineEdit()
         self.description_input.setPlaceholderText("Nhập diễn giải")
@@ -60,10 +60,19 @@ class TransactionDialog(BaseDialog):
 
     def populate_categories(self):
         self.category_combo.clear()
-        limit = 10
+        limit = 100
         offset = 0
         self.categories = self.main_window.db_manager.category_manager.get_categories(limit, offset)
-        for category in self.categories:
+
+        if not self.transaction_id:
+            transaction_type = "Chi tiêu"
+        else:
+            transaction_type = self.transaction_data.get('transaction_type', "Chi tiêu")
+
+        filtered_categories = [
+            cat for cat in self.categories if cat.get('category_type') == transaction_type
+        ]
+        for category in filtered_categories:
             self.category_combo.addItem(category['category_name'], category['category_id'])
 
     def update_category_options(self, transaction_type):
@@ -78,7 +87,7 @@ class TransactionDialog(BaseDialog):
         return {
             "amount": self.amount_input.text(),
             "type": self.type_combo.currentText(),
-            "category": self.category_combo.currentText(),
+            "category_name": self.category_combo.currentText(),
             "description": self.description_input.text(),
             "date": self.date_edit.date().toString("yyyy-MM-dd"),
             "account": self.account_combo.currentText()
@@ -88,26 +97,28 @@ class TransactionDialog(BaseDialog):
         data = self.get_transaction_data()
         amount = data["amount"]
         transaction_type = data["type"]
-        category = data["category"]
+        category_name = data["category_name"]
         description = data["description"]
         date = data["date"]
         account = data["account"]
 
-        if not amount or not transaction_type or not category or not account:
+        if not amount or not transaction_type or not category_name or not account:
             self.message_box.show_error_message("Vui lòng nhập đầy đủ thông tin")
             return
 
         try:
-            amount_float = float(amount.replace(",", "").replace(" VND", ""))
+            amount_int = int(amount.replace(",", "").replace(" VND", ""))
         except ValueError:
-            self.message_box.show_error_message("Số tiền phải là một số hợp lệ")
+            self.message_box.show_error_message("Số tiền phải là một số")
             return
 
+        category_id = self.main_window.db_manager.category_manager.get_category_id_by_name(category_name)
         if self.transaction_id:
             self.main_window.db_manager.transaction_manager.update_transaction(
                 transaction_id=self.transaction_id,
-                amount=amount_float,
+                amount=amount_int,
                 transaction_type=transaction_type,
+                category_id=category_id,
                 description=description,
                 date=date
             )
@@ -118,7 +129,7 @@ class TransactionDialog(BaseDialog):
                 user_id=user_id,
                 account_id=self.account_combo.currentData(),
                 category_id=self.category_combo.currentData(),
-                amount=amount_float,
+                amount=amount_int,
                 transaction_type=transaction_type,
                 description=description,
                 date=date

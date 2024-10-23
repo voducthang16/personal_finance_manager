@@ -13,32 +13,30 @@ class MessageBoxWidget(QWidget):
         msg_box.setText(message)
         msg_box.setIcon(icon_type)
 
-        background_color = ""
-        hover_color = ""
-        text_color = "white"
-
         if icon_type == QMessageBox.Information:
-            background_color = '#28a745'
             hover_color = '#218838'
+            button_color = '#28a745'
         elif icon_type == QMessageBox.Warning:
-            background_color = '#ffc107'
             hover_color = '#e0a800'
-            text_color = 'black'
+            button_color = '#ffc107'
         elif icon_type == QMessageBox.Critical:
-            background_color = '#dc3545'
             hover_color = '#c82333'
+            button_color = '#dc3545'
+        else:
+            button_color = '#5dade2'
+            hover_color = '#3498db'
 
         style = f"""
-            QMessageBox {{
+            QMessageBox#customMessageBox {{
                 background-color: #000;
-                color: {text_color};
+                color: #fff;
             }}
             QMessageBox QLabel {{
-                color: {text_color};
+                color: #fff;
             }}
             QMessageBox QPushButton {{
-                background-color: {background_color};
-                color: {text_color};
+                background-color: {button_color};
+                color: #fff;
                 border: none;
                 padding: 8px 16px;
                 border-radius: 6px;
@@ -60,18 +58,12 @@ class MessageBoxWidget(QWidget):
         msg_box.exec_()
 
     def center_on_screen(self, msg_box):
-        # Get the screen geometry or the parent geometry if available
-        if self.parent:
-            geometry = self.parent.geometry()
-        else:
-            screen = QDesktopWidget().availableGeometry()
-            geometry = screen
+        screen = QDesktopWidget().availableGeometry()
+        geometry = screen
 
-        # Calculate the center position
         center_x = geometry.center().x() - (msg_box.width() // 2)
         center_y = geometry.center().y() - (msg_box.height() // 2)
 
-        # Move the message box to the center
         msg_box.move(center_x, center_y)
 
     def show_success_message(self, message):

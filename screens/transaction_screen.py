@@ -15,7 +15,6 @@ class TransactionScreen(QWidget):
         self.current_page = 0
         self.total_pages = 1
 
-        # Main layout
         self.layout = QVBoxLayout(self)
         self.layout.setSpacing(10)
         self.layout.setContentsMargins(10, 0, 10, 0)
@@ -70,7 +69,7 @@ class TransactionScreen(QWidget):
         transactions_formatted = self.format_transaction_data(transactions_paginated)
 
         headers = ["Tài Khoản", "Danh Mục", "Số Tiền", "Loại", "Ngày", "Mô Tả"]
-        column_widths = [100, 150, 100, 80, 100, 180]
+        column_widths = [100, 120, 120, 80, 100, 180]
 
         self.table_widget.set_data(headers, transactions_formatted, column_widths)
 

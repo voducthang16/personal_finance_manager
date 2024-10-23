@@ -41,37 +41,33 @@ class AccountDialog(BaseDialog):
         balance = data["balance"]
 
         if not account_name or not balance:
-            self.message_box.show_error_message("Vui lòng nhập đầy đủ thông tin.")
+            self.message_box.show_error_message("Vui lòng nhập đầy đủ thông tin")
             return
 
         if not re.match(r"^\d+$", balance):
-            self.message_box.show_error_message("Số dư phải là một số nguyên hợp lệ, chỉ bao gồm các chữ số.")
+            self.message_box.show_error_message("Số dư phải là một số nguyên")
             return
 
         try:
-            # Chuyển đổi số dư sang dạng số nguyên (integer)
-            balance_int = int(balance)  # Chỉ chấp nhận số nguyên
+            balance_int = int(balance)
             if balance_int <= 0:
-                self.message_box.show_error_message("Số dư phải lớn hơn 0.")
+                self.message_box.show_error_message("Số dư phải lớn hơn 0")
                 return
         except ValueError:
-            self.message_box.show_error_message("Số dư phải là một số nguyên hợp lệ.")
+            self.message_box.show_error_message("Số dư phải là một số nguyên")
             return
 
-        # Kiểm tra nếu có account_id thì cập nhật, nếu không thì thêm mới
         if self.account_id:
-            result = self.main_window.db_manager.account_manager.update_account(self.account_id, account_name,
-                                                                                balance_int)
+            result = self.main_window.db_manager.account_manager.update_account(self.account_id, account_name, balance_int)
         else:
             user_id = self.main_window.user_info['user_id']
             result = self.main_window.db_manager.account_manager.add_account(user_id, account_name, balance_int)
 
-        # Kiểm tra kết quả trả về từ add/update
-        if result is not None:  # Nếu có lỗi, hiển thị thông báo lỗi
+        if result is not None:
             self.message_box.show_error_message(result)
         else:
             if self.account_id:
-                self.message_box.show_success_message("Cập nhật tài khoản thành công.")
+                self.message_box.show_success_message("Cập nhật tài khoản thành công")
             else:
                 self.message_box.show_success_message("Thêm tài khoản thành công.")
 

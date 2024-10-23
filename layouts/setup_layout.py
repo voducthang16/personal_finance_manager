@@ -132,9 +132,6 @@ class SetupLayout(QWidget):
             self.main_window.db_manager.user_manager.add_user(name, email)
 
             user = self.main_window.db_manager.user_manager.get_first_user()
-            if user is None:
-                self.message_box.show_error_message("Không thể tìm thấy người dùng vừa thêm.")
-                return
 
             user_id = user['user_id']
 

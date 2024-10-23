@@ -76,6 +76,21 @@ class CategoryManager:
 
         return tuples_to_dicts(categories_tuples, columns)
 
+    def get_category_id_by_name(self, category_name):
+        try:
+            self.cursor.execute("""
+                SELECT category_id FROM categories
+                WHERE category_name = ? AND is_deleted = 0
+            """, (category_name,))
+            result = self.cursor.fetchone()
+            if result:
+                return result[0]
+            else:
+                return None
+        except sqlite3.Error as e:
+            print(f"Lỗi khi lấy category_id từ category_name '{category_name}': {e}")
+            return None
+
     def count_categories(self):
         self.cursor.execute("""
         SELECT COUNT(*) FROM categories WHERE is_deleted = 0

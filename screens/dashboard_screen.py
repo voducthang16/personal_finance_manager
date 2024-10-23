@@ -331,7 +331,7 @@ class DashboardScreen(QWidget):
                     qproperty-alignment: AlignCenter;
                 }
             """)
-            no_data_label.setFixedHeight(320)
+            no_data_label.setFixedHeight(318)
             content_layout.addWidget(no_data_label)
             content_layout.addStretch()
         else:
