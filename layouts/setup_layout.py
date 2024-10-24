@@ -5,6 +5,7 @@ from PyQt5.QtGui import QIntValidator
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QSpacerItem, QSizePolicy)
 from PyQt5.QtCore import Qt
 
+from utils import is_valid_email
 from widgets import MessageBoxWidget
 
 
@@ -101,8 +102,7 @@ class SetupLayout(QWidget):
         if not name or not email or not account_name or not account_balance:
             return "Vui lòng điền tất cả các trường"
 
-        email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
-        if not re.match(email_regex, email):
+        if not is_valid_email((email)):
             return "Email không hợp lệ"
 
         if not re.match(r"^\d+$", account_balance):

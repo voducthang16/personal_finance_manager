@@ -1,1 +1,2 @@
 from utils.tuples_to_dicts import tuples_to_dicts
+from utils.is_valid_email import is_valid_email

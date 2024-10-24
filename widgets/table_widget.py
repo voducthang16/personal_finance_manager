@@ -14,7 +14,6 @@ class TableWidget(QWidget):
         self.delete_dialog = delete_dialog
         self.column_mapping = column_mapping
 
-        # Main layout
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(5)

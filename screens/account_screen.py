@@ -15,7 +15,6 @@ class AccountScreen(QWidget):
         self.current_page = 0
         self.total_pages = 1
 
-        # Main layout
         self.layout = QVBoxLayout(self)
         self.layout.setSpacing(10)
         self.layout.setContentsMargins(10, 0, 10, 0)

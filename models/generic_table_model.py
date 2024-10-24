@@ -11,7 +11,6 @@ class GenericTableModel(QAbstractTableModel):
         self.update_current_page_data()
 
     def update_current_page_data(self):
-        """Cập nhật dữ liệu cho trang hiện tại."""
         start = self.current_page * self.page_size
         end = start + self.page_size
         self._page_data = self._all_data[start:end]
@@ -20,7 +19,6 @@ class GenericTableModel(QAbstractTableModel):
         return len(self._page_data)
 
     def columnCount(self, parent=None):
-        # Thêm một cột cho Action (Edit/Delete)
         return len(self.headers) + 1
 
     def data(self, index, role=Qt.DisplayRole):

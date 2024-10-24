@@ -153,9 +153,8 @@ class MainWindow(QMainWindow):
         info_label.setStyleSheet("font-size: 16px;")
 
         top_layout.addWidget(info_label)
-        top_layout.addStretch()  # Đẩy nút về bên phải
+        top_layout.addStretch()  # push the button to the right
 
-        # Xử lý thêm nút theo từng menu
         if menu_name == SCREEN_NAMES["ACCOUNT"]:
             add_account = QPushButton("Thêm Tài Khoản")
             add_account.setFixedSize(160, 40)
@@ -189,7 +188,7 @@ class MainWindow(QMainWindow):
                     background-color: #71368a;
                 }
             """)
-            add_category.clicked.connect(self.open_category_dialog)
+            add_category.clicked.connect(self.open_add_category_dialog)
             top_layout.addWidget(add_category)
 
         elif menu_name == SCREEN_NAMES["TRANSACTION"]:
@@ -213,8 +212,7 @@ class MainWindow(QMainWindow):
         if self.top_info_widget is not None:
             self.right_layout.insertWidget(0, self.top_info_widget)
 
-    def open_category_dialog(self):
-        """Mở hộp thoại danh mục."""
+    def open_add_category_dialog(self):
         dialog = CategoryDialog(self)
         dialog.exec_()
 
@@ -234,7 +232,6 @@ class MainWindow(QMainWindow):
             self.create_top_layout(menu_name)
 
         else:
-            # Nếu không tìm thấy, hiển thị màn hình mặc định
             self.stacked_widget.setCurrentWidget(self.scrollable_dashboard)
 
     def refresh_current_screen(self):
@@ -246,13 +243,13 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Personal Finance Manager")
         self.setWindowIcon(QIcon('assets/logo.png'))
 
-        # Set minimum size to 80% width and 80% height of the screen
+        # set minimum size to 80% width and 80% height of the screen
         screen = QDesktopWidget().availableGeometry()
         min_width = int(screen.width() * 0.8)
         min_height = int(screen.height() * 0.8)
         self.setMinimumSize(min_width, min_height)
 
-        # Center screen khi mở ứng dụng
+        # when open app center screen
         qr = self.frameGeometry()
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)

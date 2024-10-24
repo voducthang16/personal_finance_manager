@@ -187,87 +187,96 @@ class DashboardScreen(QWidget):
 
     def update_overview_finance(self):
         user_id = self.main_window.user_info['user_id']
-        start_date_str = self.start_date.toString("yyyy-MM-dd")
-        end_date_str = self.end_date.toString("yyyy-MM-dd")
-        current_text = self.combo_box.currentText()
-        if current_text == "Hôm nay":
-            period_type = "hôm"
-        elif current_text == "Tuần này":
-            period_type = "tuần"
-        elif current_text == "Tháng này":
-            period_type = "tháng"
-        elif current_text == "Quý này":
-            period_type = "quý"
-        else:
-            period_type = "khoảng trước"
 
-        # Tổng thu nhập trong khoảng thời gian hiện tại
-        total_income = self.main_window.db_manager.transaction_manager.get_total_income(user_id, start_date_str, end_date_str)
+        # Tính cho tháng hiện tại
+        current_date = QDate.currentDate()
+        current_month_start = QDate(current_date.year(), current_date.month(), 1)
+        current_month_end = QDate(current_date.year(), current_date.month(), current_month_start.daysInMonth())
 
-        # Tổng thu nhập trong khoảng thời gian trước đó (để tính % so với trước)
-        # Giả sử khoảng thời gian trước đó có độ dài tương tự
-        delta_days = self.start_date.daysTo(self.end_date) + 1
-        if current_text == "Quý này":
-            # Đối với quý, tính khoảng thời gian trước đó là 3 tháng
-            prev_start_date = self.start_date.addMonths(-3)
-            prev_end_date = self.end_date.addMonths(-3)
-        elif current_text == "Tháng này":
-            prev_start_date = self.start_date.addMonths(-1)
-            prev_end_date = self.end_date.addMonths(-1)
-        elif current_text == "Tuần này":
-            prev_start_date = self.start_date.addDays(-7)
-            prev_end_date = self.end_date.addDays(-7)
-        elif current_text == "Hôm nay":
-            prev_start_date = self.start_date.addDays(-1)
-            prev_end_date = self.end_date.addDays(-1)
-        else:
-            prev_start_date = self.start_date.addDays(-delta_days)
-            prev_end_date = self.end_date.addDays(-1)
+        current_start_str = current_month_start.toString("yyyy-MM-dd")
+        current_end_str = current_month_end.toString("yyyy-MM-dd")
 
-        prev_start_str = prev_start_date.toString("yyyy-MM-dd")
-        prev_end_str = prev_end_date.toString("yyyy-MM-dd")
+        # Tính cho tháng trước
+        prev_month_start = QDate(current_date.year(), current_date.month() - 1, 1)
+        prev_month_end = QDate(current_date.year(), current_date.month() - 1, prev_month_start.daysInMonth())
+
+        prev_start_str = prev_month_start.toString("yyyy-MM-dd")
+        prev_end_str = prev_month_end.toString("yyyy-MM-dd")
+
+        # Tính tổng thu nhập và chi tiêu trong tháng hiện tại
+        total_income_current = self.main_window.db_manager.transaction_manager.get_total_income(user_id, current_start_str, current_end_str)
+        total_expense_current = self.main_window.db_manager.transaction_manager.get_total_expense(user_id, current_start_str, current_end_str)
+
+        # Tính tổng thu nhập và chi tiêu trong tháng trước
         total_income_prev = self.main_window.db_manager.transaction_manager.get_total_income(user_id, prev_start_str, prev_end_str)
-        if total_income_prev:
-            income_change = ((total_income - total_income_prev) / total_income_prev) * 100
-            income_note = f"{income_change:.2f}% so với {period_type} trước"
-        else:
-            income_note = "0% so với " + period_type + " trước"
-
-        # Tổng chi tiêu trong khoảng thời gian hiện tại
-        total_expense = self.main_window.db_manager.transaction_manager.get_total_expense(user_id, start_date_str, end_date_str)
-
-        # Tổng chi tiêu trong khoảng thời gian trước đó
         total_expense_prev = self.main_window.db_manager.transaction_manager.get_total_expense(user_id, prev_start_str, prev_end_str)
-        if total_expense_prev:
-            expense_change = ((total_expense - total_expense_prev) / total_expense_prev) * 100
-            expense_note = f"{expense_change:.2f}% so với {period_type} trước"
-        else:
-            expense_note = "0% so với " + period_type + " trước"
 
-        # Tính toán tiết kiệm
-        savings = total_income - total_expense
-        savings_prev = total_income_prev - total_expense_prev if total_income_prev and total_expense_prev else 0
-        if savings_prev:
-            savings_change = ((savings - savings_prev) / savings_prev) * 100
-            savings_note = f"{savings_change:.2f}% so với {period_type} trước"
+        # Tính phần trăm thay đổi cho thu nhập
+        if total_income_prev < 0:
+            if total_income_current > 0:
+                income_change = ((total_income_current - total_income_prev) / abs(total_income_prev)) * 100
+            else:
+                income_change = ((total_income_current - total_income_prev) / abs(total_income_prev)) * 100
         else:
-            savings_note = "0% so với " + period_type + " trước"
+            if total_income_prev > 0:
+                income_change = ((total_income_current - total_income_prev) / total_income_prev) * 100
+            else:
+                income_change = 100 if total_income_current > 0 else 0
 
-        # Số dư hiện tại (có thể không thay đổi dựa trên khoảng thời gian, nhưng nếu cần, có thể tính lại)
+        income_change_text = "Tăng" if income_change > 0 else "Giảm" if income_change < 0 else "Không thay đổi"
+
+        # Tính phần trăm thay đổi cho chi tiêu
+        if total_expense_prev < 0:
+            if total_expense_current > 0:
+                expense_change = ((total_expense_current - total_expense_prev) / abs(total_expense_prev)) * 100
+            else:
+                expense_change = ((total_expense_current - total_expense_prev) / abs(total_expense_prev)) * 100
+        else:
+            if total_expense_prev > 0:
+                expense_change = ((total_expense_current - total_expense_prev) / total_expense_prev) * 100
+            else:
+                expense_change = 100 if total_expense_current > 0 else 0
+
+        expense_change_text = "Tăng" if  expense_change > 0 else "Giảm" if expense_change < 0 else "Không thay đổi"
+
+        # Tính tiết kiệm cho tháng hiện tại và tháng trước
+        savings_current = total_income_current - total_expense_current
+        savings_prev = total_income_prev - total_expense_prev
+
+        if savings_prev == savings_current:
+            savings_change = 0
+            savings_change_text = "Không thay đổi"
+        else:
+            if savings_prev < 0:
+                savings_change = ((savings_current - savings_prev) / abs(savings_prev)) * 100
+            else:
+                savings_change = ((savings_current - savings_prev) / savings_prev) * 100 if savings_prev > 0 else 100 if savings_current > 0 else 0
+
+            savings_change_text = "Tăng" if savings_change > 0 else "Giảm"
+
+        # Cập nhật các QLabel cho thu nhập, chi tiêu và tiết kiệm
+        self.overview_labels["Tổng thu nhập_value"].setText("{:,.0f} đ".format(total_income_current))
+        self.overview_labels["Tổng chi tiêu_value"].setText("{:,.0f} đ".format(total_expense_current))
+        self.overview_labels["Tiết kiệm_value"].setText("{:,.0f} đ".format(savings_current))
+
+        if income_change == 0:
+            self.overview_labels["Tổng thu nhập_note"].setText("Không thay đổi so với tháng trước")
+        else:
+            self.overview_labels["Tổng thu nhập_note"].setText(f"{income_change_text}: {abs(income_change):.2f}% so với tháng trước")
+
+        if expense_change == 0:
+            self.overview_labels["Tổng chi tiêu_note"].setText("Không thay đổi so với tháng trước")
+        else:
+            self.overview_labels["Tổng chi tiêu_note"].setText(f"{expense_change_text}: {abs(expense_change):.2f}% so với tháng trước")
+
+        if savings_change == 0:
+            self.overview_labels["Tiết kiệm_note"].setText("Không thay đổi so với tháng trước")
+        else:
+            self.overview_labels["Tiết kiệm_note"].setText(f"{savings_change_text}: {abs(savings_change):.2f}% so với tháng trước")
+
+        # Cập nhật số dư hiện tại
         current_balance = self.main_window.db_manager.transaction_manager.get_total_balance(user_id)
-
-        # Cập nhật các QLabel
-        self.overview_labels["Tổng thu nhập_value"].setText("{:,.0f} đ".format(total_income))
-        self.overview_labels["Tổng thu nhập_note"].setText(income_note)
-
-        self.overview_labels["Tổng chi tiêu_value"].setText("{:,.0f} đ".format(total_expense))
-        self.overview_labels["Tổng chi tiêu_note"].setText(expense_note)
-
-        self.overview_labels["Tiết kiệm_value"].setText("{:,.0f} đ".format(savings))
-        self.overview_labels["Tiết kiệm_note"].setText(savings_note)
-
         self.overview_labels["Số dư hiện tại_value"].setText("{:,.0f} đ".format(current_balance))
-        self.overview_labels["Số dư hiện tại_note"].setText("")
 
     def create_main_row(self):
         main_row_widget = QWidget()
