@@ -243,10 +243,10 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Personal Finance Manager")
         self.setWindowIcon(QIcon('assets/logo.png'))
 
-        # set minimum size to 80% width and 80% height of the screen
+        # set minimum size to 100% width and 100% height of the screen
         screen = QDesktopWidget().availableGeometry()
-        min_width = int(screen.width() * 0.8)
-        min_height = int(screen.height() * 0.8)
+        min_width = int(screen.width() * 1)
+        min_height = int(screen.height() * 1)
         self.setMinimumSize(min_width, min_height)
 
         # when open app center screen
